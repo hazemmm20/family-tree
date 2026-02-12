@@ -1,69 +1,540 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>قائمة الشرف</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>قائمة السير الذاتية - شجرة العائلة</title>
+
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,line-clamp"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f637a",
+            accent: "#cfae61",
+            "background-light": "#f8f8f6",
+            "background-dark": "#0F1115",
+            "card-light": "#ffffff",
+            "card-dark": "#16191E",
+            "bg-charcoal": "#0F1115",
+            "bg-card": "#16191E",
+            "text-cream": "#FDFBF7",
+            "muted-slate": "#94A3B8",
+            "accent-gold-dark": "#D4AF37",
+            gold: "#cfae61",
+          },
+          fontFamily: {
+            display: ["Cairo", "sans-serif"],
+            amiri: ["Amiri", "serif"],
+          },
+          backgroundImage: {
+            "islamic-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        }
+      }
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    }
+  </style>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .ornamental-divider{
+      display:flex;align-items:center;justify-content:center;margin:2rem 0;
+    }
+    .ornamental-divider::before,.ornamental-divider::after{
+      content:"";height:1px;flex-grow:1;
+      background:linear-gradient(to right, transparent, #cfae61, transparent);
+    }
+    .ornamental-icon{margin:0 1rem;color:#cfae61;}
+
+    .arch-mask{ border-radius: 140px 140px 18px 18px; }
+    @media (max-width: 640px){ .arch-mask{ border-radius: 120px 120px 16px 16px; } }
+
+    .bio-image{
+      filter: sepia(10%) contrast(1.05);
+      transition: transform .6s cubic-bezier(.4,0,.2,1), filter .6s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
+    }
+    .hon-card:hover .bio-image{
+      filter: sepia(0%) contrast(1.1);
+      transform: scale(1.05);
+    }
+  </style>
+
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+
+      const obs = new MutationObserver(() => {
+        const t = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title">قائمة الشرف</div>
-      <div class="subtitle">أبرز الرموز والعلماء والشخصيات المؤثرة</div>
-    </div>
-  </div>
+<body class="bg-background-light dark:bg-bg-charcoal text-[#272522] dark:text-text-cream font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-gold selection:text-background-dark transition-colors duration-300">
 
-  <nav class="topnav">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink" href="/about">نبذة</a>
-    <a class="navLink active" href="/honor">قائمة الشرف</a>
-    <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink" href="/support">الدعم</a>
-  </nav>
+  <!-- Header (كما هو) -->
+  <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin/login">لوحة الإدارة</a>
-  </div>
-</header>
-
-<main class="page">
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">الأسماء</div></div>
-    <div class="cardBody">
-      <div class="honGrid">
-        <% if (!items || items.length === 0) { %>
-          <div class="muted">لا يوجد عناصر بعد. أضف من لوحة الإدارة → إدارة الشرف.</div>
-        <% } %>
-
-        <% for (let i=0; i<items.length; i++){ const x = items[i]; %>
-          <div class="card">
-            <div class="cardHeader">
-              <div style="font-weight:950"><%= x.name %></div>
-              <div class="small"><%= x.field || "" %></div>
-            </div>
-            <div class="cardBody">
-              <% if (x.photo_url) { %>
-                <img src="<%= x.photo_url %>" alt="<%= x.name %>" class="preview" style="width:100%; height:180px; border-radius:18px; margin-bottom:10px">
-              <% } %>
-              <div class="muted" style="line-height:1.8"><%= (x.achievement || "").replace(/\n/g,"<br>") %></div>
-            </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+            <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
           </div>
-        <% } %>
+
+          <div class="hidden sm:flex flex-col items-start">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">قائمة السير الذاتية</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 md:gap-8">
+          <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/about">نبذة</a>
+            <a class="text-sm font-bold text-accent dark:text-gold decoration-2 underline-offset-8 underline" href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
+          </nav>
+
+          <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
+            <button id="uiThemeBtn"
+              class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-gold/30 hover:bg-gray-50 dark:hover:bg-gold/10 transition-all"
+              type="button" title="تبديل المظهر">
+              <span class="material-symbols-outlined text-gray-600 dark:hidden">dark_mode</span>
+              <span class="material-symbols-outlined text-gold hidden dark:block">light_mode</span>
+            </button>
+
+            <a href="/admin/login"
+              class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
+                     dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10
+                     flex items-center justify-center"
+              title="تسجيل الدخول">
+              <span class="material-symbols-outlined text-[22px]">login</span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
-</main>
+  </header>
 
-<style>
-  .honGrid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;}
-  @media (max-width: 1000px){ .honGrid{grid-template-columns:1fr;} }
-</style>
+  <main class="flex-grow">
+
+    <!-- Hero -->
+    <section class="relative pt-20 pb-10 px-4 bg-background-light dark:bg-background-dark overflow-hidden">
+      <div class="absolute inset-0 bg-islamic-pattern opacity-100 dark:opacity-10 pointer-events-none"></div>
+
+      <div class="relative max-w-5xl mx-auto text-center z-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 border border-accent/20">
+          <span class="material-symbols-outlined text-sm">workspace_premium</span>
+          <span>أبرز الرموز والعلماء والشخصيات المؤثرة</span>
+        </div>
+
+        <h1 class="text-5xl md:text-6xl font-black text-primary dark:text-white mb-4 tracking-tight leading-tight">
+          قائمة السير الذاتية
+        </h1>
+
+        <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          السير الذاتية لافراد عائلة خاشقجي المباركة.
+        </p>
+
+        <div class="ornamental-divider max-w-xs mx-auto mt-8">
+          <span class="material-symbols-outlined ornamental-icon">stars</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Bar -->
+    <section class="sticky top-20 z-40 bg-background-light/95 dark:bg-bg-charcoal/85 backdrop-blur-md border-y border-gray-200 dark:border-white/5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col lg:flex-row gap-3 justify-between items-center">
+
+          <div class="w-full lg:max-w-md">
+            <div class="relative group/search">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400 group-focus-within/search:text-primary dark:group-focus-within/search:text-gold transition-colors">
+                <span class="material-symbols-outlined">search</span>
+              </div>
+
+              <input
+                id="honorSearch"
+                class="block w-full pr-10 pl-10 py-3 rounded-xl bg-white dark:bg-bg-card ring-1 ring-gray-200 dark:ring-white/10
+                       focus:ring-2 focus:ring-primary/40 dark:focus:ring-gold/30
+                       text-sm placeholder-gray-400 dark:placeholder-gray-500 transition-shadow shadow-sm"
+                placeholder="ابحث بالاسم أو المجال أو النبذة أو الإنجاز..."
+                type="text"
+                autocomplete="off"
+              />
+
+              <button
+                id="clearSearch"
+                type="button"
+                class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 hover:text-primary dark:hover:text-gold transition-colors"
+                title="مسح"
+                style="display:none"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="w-full lg:w-auto flex items-center justify-between gap-3">
+            <div class="inline-flex items-center gap-2 text-xs font-bold text-accent bg-accent/10 border border-accent/20 px-3 py-2 rounded-full">
+              <span class="material-symbols-outlined text-[16px]">filter_alt</span>
+              <span id="resultCount">المعروض: 0 / 0</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid -->
+    <section class="relative py-10 px-4 md:px-8 max-w-7xl mx-auto">
+
+      <% if (!items || items.length === 0) { %>
+        <div class="max-w-3xl mx-auto">
+          <div class="bg-card-light dark:bg-card-dark p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm text-center">
+            <div class="mx-auto w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined">info</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-primary dark:text-white mb-2">لا يوجد عناصر بعد</h2>
+            <p class="text-gray-600 dark:text-gray-300">أضف عناصر من لوحة الإدارة → إدارة السير الذاتية.</p>
+          </div>
+        </div>
+      <% } else { %>
+
+        <div id="honorGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+          <% for (let i=0; i<items.length; i++){ const x = items[i]; %>
+            <article
+              class="hon-card group relative flex flex-col bg-card-light dark:bg-card-dark rounded-2xl border border-gray-100 dark:border-white/10
+                     shadow-sm hover:shadow-xl hover:shadow-primary/10 dark:hover:shadow-none transition-all duration-500 overflow-hidden"
+              data-search="<%= [x.name||'', x.field||'', x.achievement||'', x.bio||''].join(' ') %>"
+              data-name="<%= x.name || '' %>"
+              data-field="<%= x.field || '' %>"
+              data-achievement="<%= x.achievement || '' %>"
+              data-bio="<%= x.bio || '' %>"
+              data-photo="<%= x.photo_url || '' %>"
+            >
+              <div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-accent to-transparent opacity-50"></div>
+
+              <div class="p-5 pb-0 flex justify-center">
+                <div class="relative w-full aspect-[4/5] overflow-hidden arch-mask border-4 border-white dark:border-white/10 shadow-inner bg-gray-100 dark:bg-black/20">
+                  <div class="absolute inset-0 bg-primary/10 z-10 mix-blend-multiply opacity-20 group-hover:opacity-0 transition-opacity"></div>
+
+                  <% if (x.photo_url) { %>
+                    <img
+                      alt="<%= x.name %>"
+                      class="w-full h-full object-cover bio-image"
+                      src="<%= x.photo_url %>"
+                      loading="lazy"
+                    />
+                  <% } else { %>
+                    <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                      <span class="material-symbols-outlined text-[52px]">person</span>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="flex flex-col flex-1 p-5 text-center relative">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-card-light dark:bg-card-dark p-1 rounded-full text-accent z-20 shadow-sm border border-gray-100 dark:border-white/10">
+                  <span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+                </div>
+
+                <h3 class="text-xl font-extrabold text-primary dark:text-white mb-1 group-hover:text-primary dark:group-hover:text-gold transition-colors mt-2">
+                  <%= x.name %>
+                </h3>
+
+                <% if (x.field) { %>
+                  <p class="text-[10px] font-black uppercase tracking-[0.2em] text-accent/90 mb-3">
+                    <%= x.field %>
+                  </p>
+                <% } else { %>
+                  <div class="h-4"></div>
+                <% } %>
+
+                <!-- الإنجاز -->
+                <% if (x.achievement) { %>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2 line-clamp-2">
+                    <%= (x.achievement || "").replace(/\n/g, " ") %>
+                  </p>
+                <% } %>
+
+                <!-- ✅ النبذة (تحت الإنجاز كما طلبت) -->
+                <% if (x.bio) { %>
+                  <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-6 line-clamp-2">
+                    <%= (x.bio || "").replace(/\n/g, " ") %>
+                  </p>
+                <% } else { %>
+                  <div class="mb-6"></div>
+                <% } %>
+
+                <div class="mt-auto pt-4 border-t border-gray-100 dark:border-white/10 w-full flex justify-between items-center">
+                  <!-- يمين: عرض التفاصيل -->
+                  <button type="button"
+                          class="text-xs text-gray-400 dark:text-gray-500 font-amiri tracking-wide hover:text-primary dark:hover:text-gold transition-colors js-open-details">
+                    عرض التفاصيل
+                  </button>
+
+                  <!-- يسار: اقرأ -->
+                  <button type="button"
+                          class="text-primary dark:text-gold hover:text-accent dark:hover:text-white font-extrabold text-sm flex items-center gap-1 group/btn js-open-details">
+                    اقرأ <span class="material-symbols-outlined text-[16px] group-hover/btn:-translate-x-1 transition-transform rotate-180">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          <% } %>
+
+        </div>
+
+        <div id="noResults" class="hidden mt-10 max-w-2xl mx-auto">
+          <div class="bg-card-light dark:bg-card-dark p-8 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm text-center">
+            <div class="mx-auto w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mb-4">
+              <span class="material-symbols-outlined">search_off</span>
+            </div>
+            <h2 class="text-xl font-extrabold text-primary dark:text-white mb-2">لا توجد نتائج</h2>
+            <p class="text-gray-600 dark:text-gray-300">جرّب كلمات أخرى أو امسح البحث لعرض الجميع.</p>
+          </div>
+        </div>
+
+      <% } %>
+    </section>
+
+    <!-- ✅ Modal التفاصيل -->
+    <div id="detailsModal" class="fixed inset-0 z-[100] hidden">
+      <div id="detailsBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+      <div class="relative mx-auto my-10 w-[92%] max-w-3xl">
+        <div class="bg-card-light dark:bg-card-dark rounded-2xl border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden">
+          <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-accent">workspace_premium</span>
+              <h3 class="font-extrabold text-primary dark:text-white text-lg">التفاصيل</h3>
+            </div>
+            <button id="detailsCloseBtn" type="button"
+                    class="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-center"
+                    aria-label="إغلاق">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="p-5 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="md:col-span-1">
+              <div class="w-full aspect-[4/5] overflow-hidden arch-mask border-4 border-white dark:border-white/10 bg-gray-100 dark:bg-black/20">
+                <img id="detailsPhoto" src="" alt="" class="w-full h-full object-cover hidden"/>
+                <div id="detailsPhotoFallback" class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
+                  <span class="material-symbols-outlined text-[52px]">person</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <h4 id="detailsName" class="text-2xl font-black text-primary dark:text-white mb-1"></h4>
+              <p id="detailsField" class="text-[11px] font-black uppercase tracking-[0.2em] text-accent/90 mb-4"></p>
+
+              <div class="space-y-4">
+                <div>
+                  <p class="text-xs font-extrabold text-gray-500 dark:text-gray-400 mb-1">الإنجاز</p>
+                  <p id="detailsAchievement" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line"></p>
+                </div>
+
+                <div>
+                  <p class="text-xs font-extrabold text-gray-500 dark:text-gray-400 mb-1">النبذة</p>
+                  <p id="detailsBio" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line"></p>
+                </div>
+              </div>
+
+              <div class="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end">
+                <button id="detailsCloseBtn2" type="button"
+                        class="px-5 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-[#185366] transition-colors
+                               dark:bg-gold dark:text-background-dark dark:hover:bg-white">
+                  إغلاق
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer (كما هو) -->
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
+      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+          © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Theme toggle -->
+  <script>
+    (function () {
+      const btn = document.getElementById("uiThemeBtn");
+      function applyTheme(next) {
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+        localStorage.setItem("theme", next);
+      }
+      btn?.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+      applyTheme(localStorage.getItem("theme") || "dark");
+    })();
+  </script>
+
+  <!-- Search / Filter -->
+  <script>
+    (function(){
+      const input = document.getElementById("honorSearch");
+      const clearBtn = document.getElementById("clearSearch");
+      const grid = document.getElementById("honorGrid");
+      const cards = grid ? Array.from(grid.querySelectorAll(".hon-card")) : [];
+      const counter = document.getElementById("resultCount");
+      const noResults = document.getElementById("noResults");
+      const total = cards.length;
+
+      function norm(str){
+        return (str || "")
+          .toString()
+          .toLowerCase()
+          .replace(/[\u064B-\u065F\u0670]/g, "")
+          .replace(/[إأآا]/g, "ا")
+          .replace(/ى/g, "ي")
+          .replace(/ؤ/g, "و")
+          .replace(/ئ/g, "ي")
+          .replace(/ة/g, "ه")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function update(){
+        const q = norm(input?.value);
+        let shown = 0;
+
+        cards.forEach(card => {
+          const hay = norm(card.getAttribute("data-search"));
+          const ok = !q || hay.includes(q);
+          card.classList.toggle("hidden", !ok);
+          if (ok) shown++;
+        });
+
+        if (counter) counter.textContent = `المعروض: ${shown} / ${total}`;
+        if (noResults) noResults.classList.toggle("hidden", shown !== 0);
+        if (clearBtn) clearBtn.style.display = q ? "flex" : "none";
+      }
+
+      input?.addEventListener("input", update);
+      clearBtn?.addEventListener("click", () => {
+        if (!input) return;
+        input.value = "";
+        input.focus();
+        update();
+      });
+
+      update();
+    })();
+  </script>
+
+  <!-- ✅ Details Modal Logic -->
+  <script>
+    (function(){
+      const modal = document.getElementById("detailsModal");
+      const backdrop = document.getElementById("detailsBackdrop");
+      const close1 = document.getElementById("detailsCloseBtn");
+      const close2 = document.getElementById("detailsCloseBtn2");
+
+      const elName = document.getElementById("detailsName");
+      const elField = document.getElementById("detailsField");
+      const elAch = document.getElementById("detailsAchievement");
+      const elBio = document.getElementById("detailsBio");
+      const elPhoto = document.getElementById("detailsPhoto");
+      const elPhotoFallback = document.getElementById("detailsPhotoFallback");
+
+      function openFromCard(card){
+        const name = card.getAttribute("data-name") || "";
+        const field = card.getAttribute("data-field") || "";
+        const achievement = card.getAttribute("data-achievement") || "";
+        const bio = card.getAttribute("data-bio") || "";
+        const photo = card.getAttribute("data-photo") || "";
+
+        elName.textContent = name;
+        elField.textContent = field || "";
+        elAch.textContent = achievement || "-";
+        elBio.textContent = bio || "-";
+
+        if (photo) {
+          elPhoto.src = photo;
+          elPhoto.alt = name;
+          elPhoto.classList.remove("hidden");
+          elPhotoFallback.classList.add("hidden");
+        } else {
+          elPhoto.src = "";
+          elPhoto.alt = "";
+          elPhoto.classList.add("hidden");
+          elPhotoFallback.classList.remove("hidden");
+        }
+
+        modal.classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+      }
+
+      function close(){
+        modal.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+      }
+
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".js-open-details");
+        if (!btn) return;
+        const card = btn.closest(".hon-card");
+        if (!card) return;
+        openFromCard(card);
+      });
+
+      backdrop?.addEventListener("click", close);
+      close1?.addEventListener("click", close);
+      close2?.addEventListener("click", close);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !modal.classList.contains("hidden")) close();
+      });
+    })();
+  </script>
 
 </body>
 </html>
+

@@ -165,6 +165,14 @@ function resetFocus(allNodesSel, allLinksSel) {
 /* ===== Pan/Zoom + Fit ===== */
 let svg, mainG, zoomBehavior;
 
+/* ✅ نخزن state عشان نحدث الثيم بدون Refresh */
+const __treeState = {
+  rootData: null,
+  nodesSel: null,
+  linksSel: null,
+  containerEl: null
+};
+
 function fitToScreen(containerEl, padding = 90) {
   const bounds = mainG.node().getBBox();
   const w = containerEl.clientWidth || 1;
@@ -180,6 +188,105 @@ function fitToScreen(containerEl, padding = 90) {
   const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
   svg.transition().duration(320).call(zoomBehavior.transform, t);
 }
+
+/* ===== Helpers: Theme + Node HTML ===== */
+function getCurrentTheme() {
+  // يدعم html.dark + data-theme
+  const isDark = document.documentElement.classList.contains("dark")
+    || (document.documentElement.getAttribute("data-theme") === "dark");
+  return isDark ? "dark" : "light";
+}
+
+function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
+  // ✅ LIGHT: نفس شكل/ألوان الوضع الفاتح السابق (يعتمد على CSS في index.html)
+  if (theme === "light") {
+    return `
+      <div class="flex flex-col items-center" style="width:${nodeW}px;height:${nodeH}px;">
+        <div class="node-portrait">
+          <img class="w-full h-full object-cover"
+               src="${photo.replace(/"/g, "%22")}"
+               alt="${name.replace(/"/g, "%22")}"
+               onerror="this.src='/images/default.png'"/>
+        </div>
+        <div class="name-box">
+          <div class="node-label-text font-bold text-lg leading-tight">${name}</div>
+          ${sub ? `<div class="node-label-text text-[10px] opacity-60">${sub}</div>` : ``}
+        </div>
+      </div>
+    `;
+  }
+
+  // ✅ DARK: نفس شكل/ألوان الوضع الداكن الحالي (ممتاز)
+  const boxBg   = "#16191E";
+  const boxBd   = "rgba(212,175,55,.55)";
+  const nameCol = "#FDFBF7";
+  const subCol  = "rgba(253,251,247,.70)";
+  const photoBg = "#0F1115";
+  const photoBd = "#D4AF37";
+
+  return `
+    <div class="flex flex-col items-center" style="width:${nodeW}px;height:${nodeH}px;">
+      <div class="node-portrait" style="background:${photoBg}; border-color:${photoBd};">
+        <img
+          style="width:100%;height:100%;object-fit:contain;display:block;padding:6px;background:${photoBg};"
+          src="${photo.replace(/"/g, "%22")}"
+          alt="${name.replace(/"/g, "%22")}"
+          onerror="this.src='/images/default.png'"
+        />
+      </div>
+      <div class="name-box" style="background:${boxBg}; border-color:${boxBd};">
+        <div class="node-label-text font-bold text-lg leading-tight" style="color:${nameCol};">${name}</div>
+        ${sub ? `<div class="node-label-text text-[10px]" style="color:${subCol};">${sub}</div>` : ``}
+      </div>
+    </div>
+  `;
+}
+
+/* ✅ تحديث nodes عند تغيير الثيم بدون Refresh */
+function updateNodesTheme() {
+  if (!__treeState.nodesSel) return;
+
+  const theme = getCurrentTheme();
+  const nodeW = 170;
+  const nodeH = 190;
+
+  __treeState.nodesSel.each(function(d) {
+    const g = d3.select(this);
+    const fo = g.select("foreignObject");
+    if (fo.empty()) return;
+
+    const photo = (d.data.photo_url && String(d.data.photo_url).trim())
+      ? String(d.data.photo_url).trim()
+      : "/images/default.png";
+
+    const name = (d.data.name || "").toString();
+    const sub  = d.data.birth_date ? String(d.data.birth_date) : "";
+
+    // نخلي التحديث على نفس عنصر الـ div داخل foreignObject
+    const div = fo.select("div");
+    if (!div.empty()) {
+      div.html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+    } else {
+      // fallback (نادر)
+      fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+    }
+  });
+}
+
+/* ✅ مراقبة تغيير الثيم */
+(function watchThemeChanges(){
+  const root = document.documentElement;
+  let last = getCurrentTheme();
+
+  const obs = new MutationObserver(() => {
+    const now = getCurrentTheme();
+    if (now === last) return;
+    last = now;
+    updateNodesTheme();
+  });
+
+  obs.observe(root, { attributes: true, attributeFilter: ["data-theme", "class"] });
+})();
 
 /* ===== Render ===== */
 function renderTree(rootData) {
@@ -205,22 +312,34 @@ function renderTree(rootData) {
   const root = d3.hierarchy(rootData);
 
   const treeLayout = d3.tree()
-    .nodeSize([260, 210])
-    .separation((a, b) => (a.parent === b.parent ? 1.3 : 1.6));
+    .nodeSize([220, 240])
+    .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.45));
 
   treeLayout(root);
+
+  function curvedLink(d) {
+    const sx = d.source.x;
+    const sy = d.source.y + 80;
+    const tx = d.target.x;
+    const ty = d.target.y - 10;
+    const midY = (sy + ty) / 2;
+    return `M${sx},${sy} C${sx},${midY} ${tx},${midY} ${tx},${ty}`;
+  }
 
   const links = mainG.append("g")
     .selectAll("path")
     .data(root.links())
     .join("path")
     .attr("class", "link")
-    .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
+    .attr("d", curvedLink)
+    .attr("fill", "none")
+    .attr("stroke", "#8B5E3C")
+    .attr("stroke-width", 3)
+    .attr("stroke-linecap", "round")
+    .attr("opacity", 0.85);
 
-  const cardW = 220, cardH = 168;
-  const photoW = 78, photoH = 78;
-  const photoX = -photoW/2;
-  const photoY = -cardH/2 + 16;
+  const nodeW = 170;
+  const nodeH = 190;
 
   const nodes = mainG.append("g")
     .selectAll("g")
@@ -229,53 +348,36 @@ function renderTree(rootData) {
     .attr("class", "nodeCard")
     .attr("transform", d => `translate(${d.x},${d.y})`);
 
-  nodes.each(function () { addFrame(d3.select(this), cardW, cardH); });
-
-  nodes.append("rect")
-    .attr("x", photoX - 10).attr("y", photoY - 10)
-    .attr("width", photoW + 20).attr("height", photoH + 20)
-    .attr("rx", 18).attr("ry", 18)
-    .attr("fill", "var(--cardFill)")
-    .attr("stroke", "#c7a24b")
-    .attr("stroke-width", 2.4);
-
-  nodes.append("rect")
-    .attr("x", photoX - 5).attr("y", photoY - 5)
-    .attr("width", photoW + 10).attr("height", photoH + 10)
-    .attr("rx", 16).attr("ry", 16)
-    .attr("fill", "#f3f4f6")
-    .attr("stroke", "#e5e7eb")
-    .attr("stroke-width", 1.2);
-
-  nodes.each(function (d) {
+  nodes.each(function(d) {
     const g = d3.select(this);
-    const clipId = `clip-${d.data.id}`;
+
+    const photo = (d.data.photo_url && String(d.data.photo_url).trim())
+      ? String(d.data.photo_url).trim()
+      : "/images/default.png";
+
+    const name = (d.data.name || "").toString();
+    const sub = d.data.birth_date ? String(d.data.birth_date) : "";
+
+    const clipId = `clip-${(d.data.id ?? (Math.random()+"").slice(2)).toString().replace(/[^\w-]/g, "")}`;
+
+    const fo = g.append("foreignObject")
+      .attr("x", -nodeW / 2)
+      .attr("y", -70)
+      .attr("width", nodeW)
+      .attr("height", nodeH)
+      .style("overflow", "visible");
+
+    // ✅ مبدئياً اكتب حسب الثيم الحالي
+    const theme = getCurrentTheme();
+    fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
 
     g.append("clipPath")
       .attr("id", clipId)
       .append("rect")
-      .attr("x", photoX).attr("y", photoY)
-      .attr("width", photoW).attr("height", photoH)
+      .attr("x", -39).attr("y", -39)
+      .attr("width", 78).attr("height", 78)
       .attr("rx", 14).attr("ry", 14);
-
-    const photo = d.data.photo_url || "/images/default.png";
-
-    g.append("image")
-      .attr("href", photo)
-      .attr("x", photoX)
-      .attr("y", photoY)
-      .attr("width", photoW)
-      .attr("height", photoH)
-      .attr("clip-path", `url(#${clipId})`)
-      .attr("preserveAspectRatio", "xMidYMid slice");
   });
-
-  nodes.append("text")
-    .attr("class", "nodeName")
-    .attr("text-anchor", "middle")
-    .attr("x", 0)
-    .attr("y", 62)
-    .text(d => d.data.name);
 
   nodes.on("click", async (event, d) => {
     event.stopPropagation();
@@ -283,7 +385,6 @@ function renderTree(rootData) {
     const p = await fetchPerson(d.data.id);
     showDetailsInSide(p);
 
-    // ✅ افتح الدروار كـ overlay (بدون ما يأثر على مساحة الشجرة)
     openDrawer();
 
     resetFocus(nodes, links);
@@ -334,14 +435,21 @@ function renderTree(rootData) {
     links.attr("opacity", 0.08);
   };
 
-  // fit أول مرة
   setTimeout(() => fitToScreen(container, 120), 0);
 
-  // لو حصل resize للشاشة: اعمل fit خفيف (مش بيصغّر إلا لو لازم)
   window.addEventListener("resize", () => {
     clearTimeout(window.__fitTimer);
     window.__fitTimer = setTimeout(() => fitToScreen(container, 120), 120);
   });
+
+  // ✅ خزّن state للتحديثات الفورية
+  __treeState.rootData = rootData;
+  __treeState.nodesSel = nodes;
+  __treeState.linksSel = links;
+  __treeState.containerEl = container;
+
+  // ✅ تأكيد تحديث الثيم مباشرة بعد أول render
+  updateNodesTheme();
 }
 
 /* ===== Init ===== */

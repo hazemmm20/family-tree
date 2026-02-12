@@ -11,12 +11,14 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(session({
-  store: new SQLiteStore({ db: "sessions.db", dir: __dirname }),
-  secret: "CHANGE_THIS_SECRET",
-  resave: false,
-  saveUninitialized: false
-}));
+app.use(
+  session({
+    store: new SQLiteStore({ db: "sessions.db", dir: __dirname }),
+    secret: "CHANGE_THIS_SECRET",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -31,25 +33,50 @@ function isAuthed(req, res, next) {
 const uploadsDir = path.join(__dirname, "public", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 
-/* ===== Multer for uploads ===== */
+/* ===== NEW: Ensure PDF uploads folder exists ===== */
+const pdfUploadsDir = path.join(__dirname, "public", "uploads", "pdfs");
+fs.mkdirSync(pdfUploadsDir, { recursive: true });
+
+/* ===== Multer for uploads (photos) ===== */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
     const safe = Date.now() + "-" + file.originalname.replace(/\s+/g, "_");
     cb(null, safe);
-  }
+  },
 });
 const upload = multer({ storage });
+
+/* ===== NEW: Multer for PDF uploads ===== */
+const pdfStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, pdfUploadsDir),
+  filename: (req, file, cb) => {
+    const safeOriginal = (file.originalname || "file.pdf").replace(/\s+/g, "_");
+    const safe = Date.now() + "-" + safeOriginal;
+    cb(null, safe);
+  },
+});
+function pdfFileFilter(req, file, cb) {
+  const okByMime = file.mimetype === "application/pdf";
+  const okByName = /\.pdf$/i.test(file.originalname || "");
+  if (okByMime || okByName) return cb(null, true);
+  cb(new Error("Only PDF files are allowed"));
+}
+const uploadPdf = multer({
+  storage: pdfStorage,
+  fileFilter: pdfFileFilter,
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+});
 
 /* ===== DB helpers ===== */
 function all(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows));
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
   });
 }
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => err ? reject(err) : resolve(row));
+    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
   });
 }
 function run(sql, params = []) {
@@ -81,7 +108,7 @@ async function setSpouseNames(personId, names) {
   await run(`DELETE FROM person_spouses WHERE person_id = ?`, [personId]);
 
   const cleaned = normalizeMulti(names)
-    .map(s => String(s || "").trim())
+    .map((s) => String(s || "").trim())
     .filter(Boolean);
 
   let ord = 1;
@@ -97,7 +124,7 @@ async function setSpouseNames(personId, names) {
 
 /* ===== Tree builder ===== */
 function buildTree(rows) {
-  const byId = new Map(rows.map(r => [r.id, { ...r, children: [] }]));
+  const byId = new Map(rows.map((r) => [r.id, { ...r, children: [] }]));
   let root = null;
 
   for (const r of byId.values()) {
@@ -125,6 +152,31 @@ async function ensureCmsTables() {
     )
   `);
 
+  // NEW: ensure pdf_url column exists
+  try {
+    const cols = await all(`PRAGMA table_info(site_pages)`);
+    const hasPdfUrl = cols.some((c) => c.name === "pdf_url");
+    if (!hasPdfUrl) {
+      await run(`ALTER TABLE site_pages ADD COLUMN pdf_url TEXT`);
+    }
+  } catch (e) {
+    console.error("pdf_url column ensure error:", e);
+  }
+
+  // ✅ NEW: ensure support contact/donation columns exist
+  try {
+    const cols2 = await all(`PRAGMA table_info(site_pages)`);
+    const needCols = ["fund_name", "bank_name", "account_number", "whatsapp", "email"];
+    for (const c of needCols) {
+      const has = cols2.some((x) => x.name === c);
+      if (!has) {
+        await run(`ALTER TABLE site_pages ADD COLUMN ${c} TEXT`);
+      }
+    }
+  } catch (e) {
+    console.error("support columns ensure error:", e);
+  }
+
   await run(`
     CREATE TABLE IF NOT EXISTS honor_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,6 +187,17 @@ async function ensureCmsTables() {
       ord INTEGER DEFAULT 1
     )
   `);
+
+  // ✅ NEW: ensure honor_items.bio column exists (نبذة)
+  try {
+    const honorCols = await all(`PRAGMA table_info(honor_items)`);
+    const hasBio = honorCols.some((c) => c.name === "bio");
+    if (!hasBio) {
+      await run(`ALTER TABLE honor_items ADD COLUMN bio TEXT`);
+    }
+  } catch (e) {
+    console.error("bio column ensure error:", e);
+  }
 
   // optional: store support messages
   await run(`
@@ -151,7 +214,7 @@ async function ensureCmsTables() {
   const seeds = [
     { slug: "about", title: "نبذة عن العائلة", subtitle: "لمحة تاريخية مختصرة عن الجذور والمسار", content: "" },
     { slug: "support", title: "الدعم والشكاوى", subtitle: "أرسل اقتراحك أو بلاغك وسيتم مراجعته", content: "" },
-    { slug: "tree-pdf", title: "شجرة العائلة PDF", subtitle: "عرض التصميم الرسمي داخل برواز مزخرف", content: "" }
+    { slug: "tree-pdf", title: "شجرة العائلة PDF", subtitle: "عرض التصميم الرسمي داخل برواز مزخرف", content: "" },
   ];
 
   for (let i = 0; i < seeds.length; i++) {
@@ -159,8 +222,8 @@ async function ensureCmsTables() {
     const exists = await get(`SELECT slug FROM site_pages WHERE slug = ?`, [s.slug]);
     if (!exists) {
       await run(
-        `INSERT INTO site_pages (slug, title, subtitle, content, updated_at)
-         VALUES (?, ?, ?, ?, datetime('now'))`,
+        `INSERT INTO site_pages (slug, title, subtitle, content, updated_at, pdf_url, fund_name, bank_name, account_number, whatsapp, email)
+         VALUES (?, ?, ?, ?, datetime('now'), NULL, '', '', '', '', '')`,
         [s.slug, s.title, s.subtitle, s.content]
       );
     }
@@ -168,7 +231,7 @@ async function ensureCmsTables() {
 }
 
 // run once at startup
-ensureCmsTables().catch(err => console.error("CMS init error:", err));
+ensureCmsTables().catch((err) => console.error("CMS init error:", err));
 
 /* =========================
    Public Pages
@@ -179,7 +242,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// CMS pages (EJS)
+// CMS pages (EJS) - (قد تكون عندك ملفات مختلفة، أبقيتها كما هي)
 app.get("/about", async (req, res) => {
   const page = await get(`SELECT * FROM site_pages WHERE slug = 'about'`);
   res.render("public_page", { slug: "about", page });
@@ -227,10 +290,7 @@ app.get("/api/person/:id", async (req, res) => {
   const row = await get("SELECT * FROM persons WHERE id = ?", [req.params.id]);
   if (!row) return res.status(404).json({ error: "Not found" });
 
-  const children = await all(
-    "SELECT id, name FROM persons WHERE father_id = ? ORDER BY id ASC",
-    [row.id]
-  );
+  const children = await all("SELECT id, name FROM persons WHERE father_id = ? ORDER BY id ASC", [row.id]);
 
   const spouses = await getSpouseNames(row.id);
   res.json({ ...row, children, spouses });
@@ -255,13 +315,15 @@ app.post("/admin/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-/* ===== Upload endpoint ===== */
+/* ===== Upload endpoint (photos) ===== */
 app.post("/admin/upload", isAuthed, upload.single("photo"), (req, res) => {
   if (!req.file) return res.status(400).send("No file uploaded");
   res.json({ url: "/uploads/" + req.file.filename });
 });
 
-/* ===== Admin: persons CRUD ===== */
+/* =========================
+   Admin: persons CRUD
+   ========================= */
 app.get("/admin", isAuthed, async (req, res) => {
   const persons = await all(`
     SELECT p.*, f.name as father_name,
@@ -285,7 +347,7 @@ app.get("/admin/person/new", isAuthed, async (req, res) => {
     persons,
     person: null,
     spouseNames: [],
-    admin: req.session.admin
+    admin: req.session.admin,
   });
 });
 
@@ -309,7 +371,7 @@ app.get("/admin/person/:id/edit", isAuthed, async (req, res) => {
   if (!person) return res.redirect("/admin");
 
   const spouseRows = await getSpouseNames(person.id);
-  const spouseNames = spouseRows.map(x => x.spouse_name);
+  const spouseNames = spouseRows.map((x) => x.spouse_name);
 
   res.render("person_form", { mode: "edit", persons, person, spouseNames, admin: req.session.admin });
 });
@@ -340,6 +402,7 @@ app.post("/admin/person/:id/delete", isAuthed, async (req, res) => {
 
   res.redirect("/admin");
 });
+
 /* =========================
    Admin: CMS (Pages + Honor)
    ========================= */
@@ -352,18 +415,109 @@ app.get("/admin/pages", isAuthed, async (req, res) => {
   res.render("pages_admin", { admin: req.session.admin, about, support, treepdf, saved: req.query.saved === "1" });
 });
 
+// ✅ UPDATED: save support extra fields too
 app.post("/admin/pages/save", isAuthed, async (req, res) => {
   const { slug, title, subtitle, content } = req.body;
+
+  if (slug === "support") {
+    const { fund_name, bank_name, account_number, whatsapp, email } = req.body;
+
+    await run(
+      `UPDATE site_pages
+       SET title=?,
+           subtitle=?,
+           content=?,
+           fund_name=?,
+           bank_name=?,
+           account_number=?,
+           whatsapp=?,
+           email=?,
+           updated_at=datetime('now')
+       WHERE slug=?`,
+      [
+        title || "",
+        subtitle || "",
+        content || "",
+        fund_name || "",
+        bank_name || "",
+        account_number || "",
+        whatsapp || "",
+        email || "",
+        slug,
+      ]
+    );
+
+    return res.redirect("/admin/pages?saved=1");
+  }
+
   await run(
     `UPDATE site_pages
      SET title=?, subtitle=?, content=?, updated_at=datetime('now')
      WHERE slug=?`,
     [title || "", subtitle || "", content || "", slug]
   );
+
   res.redirect("/admin/pages?saved=1");
 });
 
-// Honor CRUD
+/* ===== NEW: Upload TREE PDF (Admin only) ===== */
+app.post("/admin/pages/tree-pdf/upload", isAuthed, (req, res) => {
+  uploadPdf.single("pdf_file")(req, res, async (err) => {
+    try {
+      if (err) {
+        return res.status(400).send(err.message || "Upload error");
+      }
+      if (!req.file) return res.status(400).send("No PDF uploaded");
+
+      const url = "/uploads/pdfs/" + req.file.filename;
+
+      // optional: delete old file if exists
+      const old = await get(`SELECT pdf_url FROM site_pages WHERE slug='tree-pdf'`);
+      if (old?.pdf_url && typeof old.pdf_url === "string" && old.pdf_url.startsWith("/uploads/pdfs/")) {
+        const oldPath = path.join(__dirname, "public", old.pdf_url);
+        fs.unlink(oldPath, () => {});
+      }
+
+      await run(
+        `UPDATE site_pages
+         SET pdf_url=?, updated_at=datetime('now')
+         WHERE slug='tree-pdf'`,
+        [url]
+      );
+
+      return res.json({ ok: true, url });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).send("Server error");
+    }
+  });
+});
+
+/* ===== NEW: Delete TREE PDF (Admin only) ===== */
+app.post("/admin/pages/tree-pdf/delete", isAuthed, async (req, res) => {
+  try {
+    const old = await get(`SELECT pdf_url FROM site_pages WHERE slug='tree-pdf'`);
+    if (old?.pdf_url && typeof old.pdf_url === "string" && old.pdf_url.startsWith("/uploads/pdfs/")) {
+      const oldPath = path.join(__dirname, "public", old.pdf_url);
+      fs.unlink(oldPath, () => {});
+    }
+
+    await run(
+      `UPDATE site_pages
+       SET pdf_url=NULL, updated_at=datetime('now')
+       WHERE slug='tree-pdf'`
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).send("Server error");
+  }
+});
+
+/* =========================
+   Honor CRUD
+   ========================= */
 app.get("/admin/honor", isAuthed, async (req, res) => {
   const items = await all(`SELECT * FROM honor_items ORDER BY ord ASC, id ASC`);
   res.render("honor_admin", { admin: req.session.admin, items });
@@ -374,11 +528,11 @@ app.get("/admin/honor/new", isAuthed, async (req, res) => {
 });
 
 app.post("/admin/honor/new", isAuthed, async (req, res) => {
-  const { name, field, achievement, photo_url, ord } = req.body;
+  const { name, field, bio, achievement, photo_url, ord } = req.body; // ✅ NEW: bio
   await run(
-    `INSERT INTO honor_items (name, field, achievement, photo_url, ord)
-     VALUES (?, ?, ?, ?, ?)`,
-    [name || "", field || "", achievement || "", photo_url || "", Number(ord || 1)]
+    `INSERT INTO honor_items (name, field, bio, achievement, photo_url, ord)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [name || "", field || "", bio || "", achievement || "", photo_url || "", Number(ord || 1)]
   );
   res.redirect("/admin/honor");
 });
@@ -390,12 +544,12 @@ app.get("/admin/honor/:id/edit", isAuthed, async (req, res) => {
 });
 
 app.post("/admin/honor/:id/edit", isAuthed, async (req, res) => {
-  const { name, field, achievement, photo_url, ord } = req.body;
+  const { name, field, bio, achievement, photo_url, ord } = req.body; // ✅ NEW: bio
   await run(
     `UPDATE honor_items
-     SET name=?, field=?, achievement=?, photo_url=?, ord=?
+     SET name=?, field=?, bio=?, achievement=?, photo_url=?, ord=?
      WHERE id=?`,
-    [name || "", field || "", achievement || "", photo_url || "", Number(ord || 1), req.params.id]
+    [name || "", field || "", bio || "", achievement || "", photo_url || "", Number(ord || 1), req.params.id]
   );
   res.redirect("/admin/honor");
 });
@@ -419,7 +573,7 @@ app.get("/admin/support-messages", isAuthed, async (req, res) => {
   res.render("support_messages", {
     admin: req.session.admin,
     msgs,
-    deleted: req.query.deleted === "1"
+    deleted: req.query.deleted === "1",
   });
 });
 
@@ -443,13 +597,9 @@ app.get("/admin/support-messages/export.csv", isAuthed, async (req, res) => {
   };
 
   const header = ["id", "sender_name", "phone", "message", "created_at"].join(",");
-  const lines = msgs.map(m => [
-    m.id,
-    escapeCsv(m.sender_name),
-    escapeCsv(m.phone),
-    escapeCsv(m.message),
-    escapeCsv(m.created_at)
-  ].join(","));
+  const lines = msgs.map((m) =>
+    [m.id, escapeCsv(m.sender_name), escapeCsv(m.phone), escapeCsv(m.message), escapeCsv(m.created_at)].join(",")
+  );
 
   const csv = [header, ...lines].join("\n");
 
@@ -457,11 +607,12 @@ app.get("/admin/support-messages/export.csv", isAuthed, async (req, res) => {
   res.setHeader("Content-Disposition", 'attachment; filename="support_messages.csv"');
   res.send("\uFEFF" + csv);
 });
+
 /* =========================
-   Public Pages (DB Driven)
+   (كما عندك) Public Pages (DB Driven) — أبقيتها كما هي
    ========================= */
 
-// Home (tree) - سيبها زي ما هي لو انت بتعرض public/index.html
+// Home (tree)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -501,7 +652,7 @@ app.get("/tree-pdf", async (req, res) => {
   }
 });
 
-// SUPPORT (from site_pages) + show sent flag
+// SUPPORT (from site_pages)
 app.get("/support", async (req, res) => {
   try {
     const page = await get(`SELECT * FROM site_pages WHERE slug='support'`);
@@ -513,25 +664,25 @@ app.get("/support", async (req, res) => {
   }
 });
 
-// SUPPORT form submit -> save to support_messages
+// SUPPORT submit
 app.post("/support", async (req, res) => {
   try {
     const { sender_name, phone, topic, message } = req.body;
+    if (!sender_name || !message) return res.redirect("/support");
 
-    if (!sender_name || !message) {
-      return res.redirect("/support");
+    try {
+      await run(
+        `INSERT INTO support_messages (sender_name, phone, message, created_at)
+         VALUES (?, ?, ?, datetime('now'))`,
+        [String(sender_name || "").trim(), String(phone || "").trim(), String(message || "").trim()]
+      );
+    } catch (e) {
+      await run(
+        `INSERT INTO support_messages (sender_name, phone, message, created_at)
+         VALUES (?, ?, ?, datetime('now'))`,
+        [String(sender_name || "").trim(), String(phone || "").trim(), String(message || "").trim()]
+      );
     }
-
-    await run(
-      `INSERT INTO support_messages (sender_name, phone, topic, message, created_at)
-       VALUES (?, ?, ?, ?, datetime('now'))`,
-      [
-        String(sender_name || "").trim(),
-        String(phone || "").trim(),
-        String(topic || "").trim(),
-        String(message || "").trim()
-      ]
-    );
 
     return res.redirect("/support?sent=1");
   } catch (e) {
@@ -540,35 +691,16 @@ app.post("/support", async (req, res) => {
   }
 });
 
-// Redirect old URLs (اختياري علشان لو حد فاتح بالقديم)
+// Redirect old URLs
 app.get("/pages/about.html", (req, res) => res.redirect(301, "/about"));
 app.get("/pages/honor.html", (req, res) => res.redirect(301, "/honor"));
 app.get("/pages/support.html", (req, res) => res.redirect(301, "/support"));
 app.get("/pages/tree-pdf.html", (req, res) => res.redirect(301, "/tree-pdf"));
-// =========================
-// Public Page: About
-// =========================
-app.get("/about", async (req, res) => {
-  try {
-    const page = await get(
-      "SELECT * FROM site_pages WHERE slug = 'about'"
-    );
 
-    if (!page) {
-      return res.status(404).send("صفحة النبذة غير موجودة");
-    }
-
-    res.render("about", {
-      page
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("خطأ في تحميل صفحة النبذة");
-  }
-});
 /* ===== 404 ===== */
 app.use((req, res) => {
   res.status(404).send("الصفحة غير موجودة");
 });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Running on", PORT));

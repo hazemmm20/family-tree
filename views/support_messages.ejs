@@ -1,107 +1,370 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>رسائل الدعم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>رسائل الدعم - لوحة الإدارة</title>
 
+  <!-- Theme (same system) -->
   <script src="/theme.js"></script>
-  <link rel="stylesheet" href="/styles.css"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f637a",
+            accent: "#E3C56F",
+            "background-light": "#FBF9F6",
+            "background-dark": "#0F1115",
+            "surface-dark": "#1A1D21",
+            "border-dark": "#2D3139",
+            "primary-dark": "#C5A854",
+          },
+          fontFamily: { display: ["Cairo", "sans-serif"] },
+          backgroundImage: {
+            "islamic-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    html.dark ::-webkit-scrollbar-thumb { background: #2D3139; }
+    html.dark ::-webkit-scrollbar-thumb:hover { background: #E3C56F; }
+  </style>
+
+  <!-- Sync theme: data-theme -> class dark -->
+  <script>
+    (function () {
+      const t = document.documentElement.getAttribute("data-theme") || localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.classList.toggle("dark", t === "dark");
+
+      const obs = new MutationObserver(() => {
+        const next = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", next === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title">رسائل الدعم والشكاوى</div>
-      <div class="subtitle">عرض الرسائل المرسلة من صفحة الدعم</div>
-    </div>
-  </div>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-display min-h-screen overflow-hidden">
+<div class="flex h-screen w-full">
 
-  <nav class="topnav" aria-label="التنقل الرئيسي">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink" href="/about">نبذة</a>
-    <a class="navLink" href="/honor">قائمة الشرف</a>
-    <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink" href="/support">الدعم</a>
-  </nav>
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex w-72 flex-col border-e bg-white dark:bg-surface-dark border-slate-100 dark:border-border-dark relative">
+    <div class="absolute inset-0 bg-islamic-pattern pointer-events-none"></div>
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin">الأشخاص</a>
-    <a class="adminBtn" href="/admin/pages">إدارة الصفحات</a>
-    <a class="adminBtn" href="/admin/honor">إدارة الشرف</a>
-    <a class="adminBtn" href="/admin/support-messages/export.csv">تصدير CSV</a>
-    <form method="post" action="/admin/logout" style="margin:0">
-      <button class="adminBtn" type="submit">تسجيل خروج</button>
-    </form>
-  </div>
-</header>
-
-<div class="page">
-
-  <% if (deleted) { %>
-    <div class="card" style="margin-bottom:12px">
-      <div class="cardBody" style="font-weight:900; color:#22c55e">✅ تم حذف الرسالة</div>
-    </div>
-  <% } %>
-
-  <div class="card">
-    <div class="cardHeader">
-      <div>
-        <div style="font-weight:950">الرسائل</div>
-        <div class="small">الترتيب: الأحدث أولًا</div>
+    <div class="relative z-10 h-20 dark:h-24 px-6 flex items-center border-b border-slate-50 dark:border-border-dark/60">
+      <div class="flex items-center gap-3">
+        <div class="size-10 dark:size-11 rounded-xl bg-primary/10 dark:bg-accent/10 text-primary dark:text-accent flex items-center justify-center border border-transparent dark:border-accent/20">
+          <span class="material-symbols-outlined text-[22px]">family_history</span>
+        </div>
+        <div>
+          <div class="text-lg font-extrabold text-primary dark:text-white leading-none">لوحة الإدارة</div>
+          <div class="text-[11px] font-bold text-slate-400 dark:text-accent/70 uppercase tracking-[0.2em] mt-1">رسائل الدعم</div>
+        </div>
       </div>
-      <div class="small"><b><%= msgs.length %></b> رسالة</div>
     </div>
 
-    <div class="cardBody" style="overflow:auto">
-      <% if (!msgs || msgs.length === 0) { %>
-        <div class="muted">لا توجد رسائل حتى الآن.</div>
-      <% } else { %>
+    <nav class="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-1">
+      <a href="/admin" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-accent transition-colors">
+        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">dashboard</span>
+        <span class="text-sm font-bold">الأشخاص</span>
+      </a>
 
-        <table class="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>الاسم</th>
-              <th>الهاتف</th>
-              <th>الرسالة</th>
-              <th>التاريخ</th>
-              <th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
+      <a href="/admin/pages" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-accent transition-colors">
+        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">history_edu</span>
+        <span class="text-sm font-bold">إدارة الصفحات</span>
+      </a>
+
+      <a href="/admin/honor" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-accent transition-colors">
+        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">workspace_premium</span>
+        <span class="text-sm font-bold">إدارة السير الذاتية</span>
+      </a>
+
+      <a href="/admin/support-messages"
+         class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 text-primary dark:bg-accent/10 dark:text-accent border border-primary/10 dark:border-accent/20">
+        <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">mail</span>
+        <span class="text-sm font-extrabold">رسائل الدعم</span>
+        <span class="ms-auto text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-primary text-white dark:bg-accent dark:text-black">
+          <%= (msgs && msgs.length) ? msgs.length : 0 %>
+        </span>
+      </a>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 dark:border-border-dark/60"></div>
+
+      <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+        <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">account_tree</span>
+        <span class="text-sm font-bold">العودة للشجرة</span>
+      </a>
+
+      <form method="post" action="/admin/logout" class="m-0">
+        <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-start">
+          <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">logout</span>
+          <span class="text-sm font-bold">تسجيل خروج</span>
+        </button>
+      </form>
+    </nav>
+
+    <div class="relative z-10 p-4 border-t border-slate-100 dark:border-border-dark/60">
+      <div class="flex items-center gap-3">
+        <div class="size-10 rounded-full bg-cover bg-center border border-slate-200 dark:border-border-dark"
+             style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuAD76w7dErH89moiobJ2BKoYMF3cL0AkUNk0rupzEDTgILwjWTqmGWV27pkIE7W4mBMFcbgKo1mqLZWfhaKyXNTX2QMtJvfSqV55zjkIFUsACRZQF4yCE4KvO7oCzFCY6wR07xG7c3IIW-KGp1wiHaywIqzhVttikNgWU0f6vN1IvnI9u73S29_yq9QWhLvjk53ZIt6k2_RG_AQ2kLGMFmGVKsplfhUYuVY7ZrjQSh6Q4XuVZD_xWT_lkNTQZfKOpiaZkpC58hLMCs');"></div>
+        <div class="min-w-0">
+          <div class="text-sm font-extrabold text-slate-800 dark:text-white truncate"><%= admin?.username || "مدير النظام" %></div>
+          <div class="text-xs text-slate-500 dark:text-slate-500 truncate">مشرف النظام</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 min-w-0 flex flex-col overflow-hidden">
+
+    <!-- Topbar -->
+    <header class="h-20 dark:h-24 px-4 sm:px-8 flex items-center justify-between border-b
+                   bg-white/80 dark:bg-surface-dark/85 backdrop-blur-md
+                   border-slate-200/60 dark:border-border-dark">
+      <div class="flex flex-col">
+        <div class="text-xs text-slate-500 dark:text-slate-500 font-bold flex items-center gap-2">
+          <span>التواصل</span>
+          <span class="material-symbols-outlined text-[14px]">chevron_left</span>
+          <span class="text-primary dark:text-accent">رسائل الدعم</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+          رسائل الدعم والشكاوى
+        </h1>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button id="themeBtn"
+          class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-200 bg-white hover:bg-slate-50
+                 dark:border-accent/30 dark:bg-surface-dark dark:hover:bg-accent/10 transition-all"
+          type="button" title="تبديل المظهر">
+          <span class="material-symbols-outlined text-slate-600 dark:hidden">dark_mode</span>
+          <span class="material-symbols-outlined text-accent hidden dark:block">light_mode</span>
+        </button>
+
+        <a href="/admin/support-messages/export.csv"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-lg font-extrabold text-sm
+                 bg-primary text-white hover:bg-primary/90 shadow-md shadow-primary/20
+                 dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-accent/10 transition-all">
+          <span class="material-symbols-outlined text-[20px]">download</span>
+          <span class="hidden sm:inline">تصدير CSV</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-8">
+      <div class="max-w-7xl mx-auto space-y-5">
+
+        <% if (deleted) { %>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 px-4 py-3 font-extrabold
+                      dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+            ✅ تم حذف الرسالة
+          </div>
+        <% } %>
+
+        <!-- Summary + Search -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm
+                    dark:border-border-dark dark:bg-surface-dark">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center
+                          dark:bg-accent/10 dark:text-accent dark:border dark:border-accent/20">
+                <span class="material-symbols-outlined">mail</span>
+              </div>
+              <div>
+                <div class="text-sm font-extrabold text-slate-900 dark:text-white">الرسائل</div>
+                <div class="text-xs text-slate-500 dark:text-slate-500 font-bold">الترتيب: الأحدث أولاً</div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div class="text-xs font-extrabold text-slate-600 dark:text-slate-400">
+                الإجمالي: <span class="text-primary dark:text-accent"><%= (msgs && msgs.length) ? msgs.length : 0 %></span>
+              </div>
+
+              <div class="relative w-full sm:w-80">
+                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                <input id="q" type="text" placeholder="بحث بالاسم/الهاتف/النص..."
+                       class="w-full rounded-xl border border-slate-200 bg-slate-50 pr-10 pl-3 py-2.5 text-sm font-bold text-slate-700
+                              focus:bg-white focus:border-primary/50 focus:ring-0
+                              dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent/50"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <% if (!msgs || msgs.length === 0) { %>
+          <div class="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm
+                      dark:border-border-dark dark:bg-surface-dark">
+            <div class="mx-auto size-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500
+                        dark:bg-background-dark/60 dark:text-slate-400 dark:border dark:border-border-dark">
+              <span class="material-symbols-outlined text-[28px]">inbox</span>
+            </div>
+            <div class="mt-4 text-lg font-extrabold text-slate-900 dark:text-white">لا توجد رسائل حتى الآن</div>
+            <div class="mt-1 text-sm font-bold text-slate-500 dark:text-slate-500">ستظهر الرسائل المرسلة من صفحة الدعم هنا.</div>
+          </div>
+        <% } else { %>
+
+          <!-- Desktop table -->
+          <div class="hidden md:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden
+                      dark:border-border-dark dark:bg-surface-dark">
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[900px]">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-500 text-xs font-extrabold uppercase tracking-wider
+                             dark:bg-background-dark/60 dark:text-slate-500">
+                    <th class="py-4 px-4 text-right w-24">ID</th>
+                    <th class="py-4 px-4 text-right w-56">الاسم</th>
+                    <th class="py-4 px-4 text-right w-52">الهاتف</th>
+                    <th class="py-4 px-4 text-right">الرسالة</th>
+                    <th class="py-4 px-4 text-right w-48">التاريخ</th>
+                    <th class="py-4 px-4 text-left w-40">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-border-dark">
+                  <% for (let i=0; i<msgs.length; i++){ const m = msgs[i]; %>
+                    <tr class="msg-row hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors"
+                        data-name="<%= (m.sender_name || '').toLowerCase() %>"
+                        data-phone="<%= (m.phone || '').toLowerCase() %>"
+                        data-message="<%= (m.message || '').toLowerCase() %>">
+                      <td class="py-4 px-4 font-extrabold text-slate-900 dark:text-white">#<%= m.id %></td>
+                      <td class="py-4 px-4">
+                        <div class="font-extrabold text-slate-900 dark:text-white"><%= m.sender_name || "-" %></div>
+                      </td>
+                      <td class="py-4 px-4 text-sm font-bold text-slate-600 dark:text-slate-300"><%= m.phone || "-" %></td>
+                      <td class="py-4 px-4">
+                        <div class="text-sm font-bold text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap max-w-[720px]">
+                          <%= m.message || "" %>
+                        </div>
+                      </td>
+                      <td class="py-4 px-4 text-xs font-extrabold text-slate-500 dark:text-slate-500"><%= m.created_at || "-" %></td>
+                      <td class="py-4 px-4">
+                        <div class="flex items-center justify-end gap-2">
+                          <form method="post"
+                                action="/admin/support-messages/<%= m.id %>/delete"
+                                class="m-0"
+                                onsubmit="return confirm('متأكد من حذف هذه الرسالة؟');">
+                            <button type="submit"
+                              class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-extrabold text-sm
+                                     bg-white border border-red-200 text-red-600 hover:bg-red-50
+                                     dark:bg-background-dark/40 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors">
+                              <span class="material-symbols-outlined text-[18px]">delete</span>
+                              حذف
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="md:hidden space-y-3">
             <% for (let i=0; i<msgs.length; i++){ const m = msgs[i]; %>
-              <tr>
-                <td><%= m.id %></td>
-                <td><%= m.sender_name || "-" %></td>
-                <td class="small"><%= m.phone || "-" %></td>
-                <td style="max-width:520px">
-                  <div class="small" style="line-height:1.8; white-space:pre-wrap"><%= m.message || "" %></div>
-                </td>
-                <td class="small"><%= m.created_at || "-" %></td>
-                <td>
-                  <div class="rowActions">
-                    <form method="post"
-                          action="/admin/support-messages/<%= m.id %>/delete"
-                          style="margin:0"
-                          onsubmit="return confirm('متأكد من حذف هذه الرسالة؟');">
-                      <button class="ghostBtn" type="submit">حذف</button>
-                    </form>
+              <div class="msg-card rounded-2xl border border-slate-200 bg-white p-4 shadow-sm
+                          dark:border-border-dark dark:bg-surface-dark"
+                   data-name="<%= (m.sender_name || '').toLowerCase() %>"
+                   data-phone="<%= (m.phone || '').toLowerCase() %>"
+                   data-message="<%= (m.message || '').toLowerCase() %>">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-xs font-extrabold text-slate-500">#<%= m.id %></div>
+                    <div class="text-lg font-black text-slate-900 dark:text-white"><%= m.sender_name || "-" %></div>
+                    <div class="text-sm font-bold text-slate-600 dark:text-slate-300 mt-1"><%= m.phone || "-" %></div>
                   </div>
-                </td>
-              </tr>
+                  <div class="text-xs font-extrabold text-slate-500"><%= m.created_at || "-" %></div>
+                </div>
+
+                <div class="mt-3 text-sm font-bold text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
+                  <%= m.message || "" %>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                  <form method="post"
+                        action="/admin/support-messages/<%= m.id %>/delete"
+                        class="m-0"
+                        onsubmit="return confirm('متأكد من حذف هذه الرسالة؟');">
+                    <button type="submit"
+                      class="inline-flex items-center gap-2 px-3 py-2 rounded-lg font-extrabold text-sm
+                             bg-white border border-red-200 text-red-600 hover:bg-red-50
+                             dark:bg-background-dark/40 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors">
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                      حذف
+                    </button>
+                  </form>
+                </div>
+              </div>
             <% } %>
-          </tbody>
-        </table>
+          </div>
 
-      <% } %>
+        <% } %>
+
+        <div class="py-6 text-center text-xs font-bold text-slate-400 dark:text-slate-600">
+          © ٢٠٢٦ - نظام شجرة العائلة
+        </div>
+
+      </div>
     </div>
-  </div>
-
+  </main>
 </div>
+
+<script>
+  // Theme toggle (same system: data-theme)
+  (function () {
+    const btn = document.getElementById("themeBtn");
+    function setTheme(next) {
+      document.documentElement.setAttribute("data-theme", next);
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("theme", next);
+    }
+    btn?.addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme") || "dark";
+      setTheme(cur === "dark" ? "light" : "dark");
+    });
+    setTheme(localStorage.getItem("theme") || (document.documentElement.getAttribute("data-theme") || "dark"));
+  })();
+
+  // Simple client-side filter (name/phone/message)
+  (function () {
+    const q = document.getElementById("q");
+    function apply() {
+      const v = (q?.value || "").trim().toLowerCase();
+      const rows = document.querySelectorAll(".msg-row, .msg-card");
+      rows.forEach(el => {
+        const hay = [
+          el.getAttribute("data-name") || "",
+          el.getAttribute("data-phone") || "",
+          el.getAttribute("data-message") || ""
+        ].join(" ");
+        el.style.display = (!v || hay.includes(v)) ? "" : "none";
+      });
+    }
+    q?.addEventListener("input", apply);
+  })();
+</script>
 
 </body>
 </html>
+

@@ -1,76 +1,464 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><%= page?.title || "شجرة PDF" %></title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= page?.title || "شجرة PDF" %> - شجرة العائلة</title>
+
+  <!-- OLD keep -->
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css"/>
+
+  <!-- NEW (same stack as باقي الصفحات) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f637a",
+            accent: "#cfae61",
+            gold: "#cfae61",
+
+            "background-light": "#f8f8f6",
+            "background-dark": "#0F1115",
+
+            "bg-charcoal": "#0F1115",
+            "bg-card": "#16191E",
+            "text-cream": "#FDFBF7",
+            "muted-slate": "#94A3B8",
+            "accent-gold-dark": "#D4AF37",
+
+            paper: "#FDFBF7",
+          },
+          fontFamily: {
+            display: ["Cairo", "sans-serif"],
+            amiri: ["Amiri", "serif"],
+          },
+          backgroundImage: {
+            "islamic-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { border-radius: 6px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-track { background: #1A1D23; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #cfae61; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+    .light .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .light .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; }
+    .light .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    html.dark .dark-toggle-icon-moon { display: none; }
+    html:not(.dark) .dark-toggle-icon-sun { display: none; }
+
+    .gold-glow{
+      box-shadow:
+        0 20px 50px -12px rgba(0,0,0,.55),
+        0 0 40px rgba(207,174,97,.12),
+        0 0 80px rgba(207,174,97,.06);
+    }
+
+    #pdfInner{
+      transform-origin: center center;
+      transition: transform .15s ease;
+      will-change: transform;
+    }
+
+    .toolbelt{
+      opacity: 0;
+      transform: translate(-50%, -6px);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .viewer:hover .toolbelt{
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  </style>
+
+  <!-- Theme sync before paint (instant) -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+
+      const obs = new MutationObserver(() => {
+        const t = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title"><%= page?.title || "" %></div>
-      <div class="subtitle"><%= page?.subtitle || "" %></div>
-    </div>
-  </div>
+<body class="bg-background-light dark:bg-bg-charcoal text-[#272522] dark:text-text-cream font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-gold selection:text-background-dark transition-colors duration-300">
 
-  <nav class="topnav">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink" href="/about">نبذة</a>
-    <a class="navLink" href="/honor">قائمة الشرف</a>
-    <a class="navLink active" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink" href="/support">الدعم</a>
-  </nav>
+  <% const pdfUrl = (page && page.pdf_url) ? page.pdf_url : ""; %>
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin/login">لوحة الإدارة</a>
-  </div>
-</header>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
 
-<main class="page">
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">التصميم</div></div>
-    <div class="cardBody">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+            <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+          </div>
 
-      <% if (page?.content) { %>
-        <div class="muted" style="line-height:1.9; margin-bottom:10px">
-          <%= page.content.replace(/\n/g, "<br>") %>
+          <div class="hidden sm:flex flex-col items-start">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">شجرة PDF</span>
+          </div>
         </div>
-      <% } %>
 
-      <div class="pdfFrame">
-        <iframe class="pdfView" src="/assets/family-tree.pdf" title="شجرة العائلة PDF"></iframe>
+        <div class="flex items-center gap-4 md:gap-8">
+          <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/about">نبذة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-bold text-accent dark:text-gold decoration-2 underline-offset-8 underline" href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
+          </nav>
+
+          <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
+            <button id="uiThemeBtn"
+              class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-gold/30 hover:bg-gray-50 dark:hover:bg-gold/10 transition-all"
+              type="button" title="تبديل المظهر">
+              <span class="material-symbols-outlined text-gray-600 dark-toggle-icon-moon">dark_mode</span>
+              <span class="material-symbols-outlined text-gold dark-toggle-icon-sun">light_mode</span>
+            </button>
+
+            <a href="/admin/login"
+              class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
+                     dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10
+                     flex items-center justify-center"
+              title="تسجيل الدخول">
+              <span class="material-symbols-outlined text-[22px]">login</span>
+            </a>
+          </div>
+        </div>
+
       </div>
-
-      <div class="small" style="margin-top:10px">
-        الملف المطلوب: <b>public/assets/family-tree.pdf</b>
-      </div>
-
     </div>
-  </div>
-</main>
+  </header>
 
-<style>
-  .pdfFrame{
-    border-radius: 22px;
-    border: 1px solid var(--stroke);
-    background: linear-gradient(135deg, rgba(199,162,75,.18), rgba(255,255,255,.05));
-    padding: 14px;
-    box-shadow: var(--shadow);
-  }
-  .pdfView{
-    width: 100%;
-    height: 78vh;
-    border: 1px solid rgba(199,162,75,.35);
-    border-radius: 18px;
-    background: rgba(0,0,0,.2);
-  }
-</style>
+  <main class="flex-1">
+    <div class="relative bg-islamic-pattern">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
 
+        <!-- Breadcrumb -->
+        <nav class="mb-8 flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-500">
+          <a class="font-medium hover:text-primary dark:hover:text-gold hover:underline" href="/">الرئيسية</a>
+          <span class="select-none">/</span>
+          <a class="font-medium hover:text-primary dark:hover:text-gold hover:underline" href="/tree-pdf">المعرض</a>
+          <span class="select-none">/</span>
+          <span class="font-bold text-primary dark:text-gold"><%= page?.title || "شجرة PDF" %></span>
+        </nav>
+
+        <!-- Title + Subtitle -->
+        <div class="mb-10 text-center">
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#121617] dark:text-white">
+            <%= page?.title || "شجرة العائلة (PDF)" %>
+          </h1>
+          <p class="mt-4 text-lg font-medium text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            <%= page?.subtitle || "نسخة PDF عالية الدقة لشجرة العائلة، محفوظة للأجيال القادمة." %>
+          </p>
+        </div>
+
+        <!-- Optional intro content -->
+        <% if (page?.content) { %>
+          <div class="max-w-4xl mx-auto mb-10">
+            <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
+              <div class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                <%= page.content.replace(/\n/g, "<br>") %>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- Viewer -->
+        <div class="relative mx-auto mb-12 w-full max-w-5xl">
+          <div class="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-br from-[#d4af37] via-[#f3e5ab] to-[#c5a028] p-[3px] gold-glow">
+            <div class="relative flex flex-col items-center justify-center bg-primary/90 dark:bg-[#0F1115] p-2 md:p-3 rounded-[14px]">
+
+              <div class="viewer relative w-full overflow-hidden rounded-lg bg-paper shadow-2xl border border-black/5 dark:border-white/10">
+
+                <!-- Toolbelt (تظهر فقط إذا يوجد PDF) -->
+                <% if (pdfUrl) { %>
+                  <div class="toolbelt absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/90 dark:bg-[#0F1115]/90 p-2 shadow-xl backdrop-blur-md border border-gray-200 dark:border-white/10">
+                    <button id="zoomOut" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تصغير">
+                      <span class="material-symbols-outlined text-[20px]">remove</span>
+                    </button>
+
+                    <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
+
+                    <span id="zoomLabel" class="px-2 text-sm font-black text-primary dark:text-gold">100%</span>
+
+                    <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
+
+                    <button id="zoomIn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تكبير">
+                      <span class="material-symbols-outlined text-[20px]">add</span>
+                    </button>
+
+                    <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
+
+                    <button id="fullBtn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="ملء الشاشة">
+                      <span class="material-symbols-outlined text-[20px]">fullscreen</span>
+                    </button>
+                  </div>
+                <% } %>
+
+                <!-- Scrollable canvas -->
+                <div id="pdfCanvas"
+                     class="group relative aspect-[4/3] w-full <%= pdfUrl ? "cursor-grab active:cursor-grabbing overflow-auto" : "overflow-hidden" %> custom-scrollbar bg-[#fdfbf7] dark:bg-[#0b0e12]">
+                  <div class="absolute inset-0 pointer-events-none opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]"></div>
+
+                  <div class="flex min-h-full items-center justify-center p-6 md:p-10 lg:p-16">
+                    <div id="pdfInner" class="w-full max-w-5xl">
+
+                      <% if (pdfUrl) { %>
+                        <!-- PDF viewer (from DB) -->
+                        <iframe
+                          id="pdfFrame"
+                          class="w-full rounded-lg border border-black/10 dark:border-white/10 bg-white"
+                          style="height: 70vh;"
+                          src="<%= pdfUrl %>"
+                          title="شجرة العائلة PDF"
+                        ></iframe>
+                      <% } else { %>
+                        <!-- No PDF -->
+                        <div class="w-full rounded-2xl border border-dashed border-gray-300 bg-white/80 p-8 text-center shadow-sm
+                                    dark:border-white/15 dark:bg-white/5">
+                          <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent dark:bg-gold/15 dark:text-gold">
+                            <span class="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+                          </div>
+                          <h3 class="text-lg font-black text-[#121617] dark:text-white">لا يوجد ملف PDF مرفوع حالياً</h3>
+                          <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed">
+                            سيقوم مدير النظام برفع الملف من لوحة الإدارة:
+                            <span class="font-black text-primary dark:text-gold">إدارة الصفحات</span> ←
+                            <span class="font-black">شجرة العائلة (PDF)</span>
+                          </p>
+                          <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <a href="/admin/login"
+                               class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-white font-black shadow-lg shadow-primary/25 hover:translate-y-[-1px] transition-all
+                                      dark:bg-gold dark:text-background-dark dark:shadow-gold/15">
+                              <span class="material-symbols-outlined">admin_panel_settings</span>
+                              دخول الأدمن
+                            </a>
+                            <a href="/"
+                               class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-3 text-gray-700 font-black hover:bg-gray-50 transition-all
+                                      dark:bg-white/5 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/10">
+                              <span class="material-symbols-outlined">account_tree</span>
+                              العودة للشجرة
+                            </a>
+                          </div>
+                        </div>
+                      <% } %>
+
+                    </div>
+                  </div>
+
+                  <div class="absolute bottom-4 left-4 rounded-lg bg-black/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
+                    PDF
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute -bottom-4 -left-4 -z-0 h-32 w-32 rounded-full bg-accent/20 blur-3xl"></div>
+          <div class="absolute -right-4 -top-4 -z-0 h-32 w-32 rounded-full bg-primary/20 blur-3xl"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col items-center justify-center gap-6 pb-14">
+          <% if (pdfUrl) { %>
+            <a href="<%= pdfUrl %>" download
+               class="group relative flex min-w-[240px] items-center justify-center gap-3 overflow-hidden rounded-full bg-primary px-8 py-4 text-white shadow-lg shadow-primary/30 transition-all hover:translate-y-[-2px] hover:shadow-xl hover:shadow-primary/40 focus:ring-4 focus:ring-primary/20 dark:bg-gold dark:text-background-dark dark:shadow-gold/20">
+              <div class="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100"></div>
+              <span class="material-symbols-outlined animate-bounce">download</span>
+              <div class="flex flex-col items-start text-right">
+                <span class="text-sm font-medium opacity-90">تحميل ملف PDF</span>
+                <span class="text-xs font-bold opacity-70"><%= pdfUrl %></span>
+              </div>
+            </a>
+
+            <div class="flex flex-wrap items-center justify-center gap-4 text-sm font-bold text-gray-600 dark:text-gray-400">
+              <button id="printBtn" class="flex items-center gap-2 rounded-lg px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">print</span>
+                <span>طباعة</span>
+              </button>
+              <span class="hidden h-4 w-px bg-gray-300 dark:bg-white/10 sm:block"></span>
+              <button id="shareBtn" class="flex items-center gap-2 rounded-lg px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">share</span>
+                <span>مشاركة</span>
+              </button>
+            </div>
+          <% } else { %>
+            <div class="text-sm font-bold text-gray-500 dark:text-gray-400">
+              لا يمكن التحميل/الطباعة قبل رفع الملف.
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Info cards -->
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div class="flex items-start gap-4">
+              <div class="rounded-full bg-accent/10 p-3 text-accent dark:bg-gold/15 dark:text-gold">
+                <span class="material-symbols-outlined">history_edu</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-[#121617] dark:text-white">معلومة</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  يمكنك التكبير/التصغير وملء الشاشة من شريط الأدوات أعلى العارض. كما يمكنك تحميل الملف للاحتفاظ بنسخة محلية.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
+            <div class="flex items-start gap-4">
+              <div class="rounded-full bg-primary/10 p-3 text-primary dark:bg-white/10 dark:text-gold">
+                <span class="material-symbols-outlined">verified</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-[#121617] dark:text-white">تحديث الملف</h3>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  يتم رفع/استبدال ملف الـ PDF من لوحة الإدارة:
+                  <b class="font-amiri">إدارة الصفحات</b> ← <b class="font-amiri">شجرة العائلة (PDF)</b>.
+                  هذا الخيار متاح لمدير النظام فقط.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
+      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+          © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Theme toggle
+    (function () {
+      const btn = document.getElementById("uiThemeBtn");
+      function applyTheme(next) {
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+        localStorage.setItem("theme", next);
+      }
+      btn?.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+      applyTheme(localStorage.getItem("theme") || "dark");
+    })();
+
+    // Viewer controls (Zoom + Fullscreen + Drag scroll)
+    (function(){
+      const inner = document.getElementById("pdfInner");
+      const canvas = document.getElementById("pdfCanvas");
+      const zl = document.getElementById("zoomLabel");
+      const btnIn = document.getElementById("zoomIn");
+      const btnOut = document.getElementById("zoomOut");
+      const btnFull = document.getElementById("fullBtn");
+      const printBtn = document.getElementById("printBtn");
+      const shareBtn = document.getElementById("shareBtn");
+      const pdfFrame = document.getElementById("pdfFrame");
+
+      // لو ما في PDF: لا تفعل التحكم
+      if (!pdfFrame) return;
+
+      let zoom = 1;
+      function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+      function applyZoom(){
+        zoom = clamp(zoom, 0.6, 2.2);
+        if(inner) inner.style.transform = `scale(${zoom})`;
+        if(zl) zl.textContent = `${Math.round(zoom*100)}%`;
+      }
+
+      btnIn?.addEventListener("click", () => { zoom += 0.1; applyZoom(); });
+      btnOut?.addEventListener("click", () => { zoom -= 0.1; applyZoom(); });
+
+      btnFull?.addEventListener("click", async () => {
+        const el = canvas;
+        if (!el) return;
+        try {
+          if (!document.fullscreenElement) await el.requestFullscreen();
+          else await document.exitFullscreen();
+        } catch(e) {}
+      });
+
+      // Drag-to-scroll
+      let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+      canvas?.addEventListener("mousedown", (e) => {
+        isDown = true;
+        startX = e.pageX;
+        startY = e.pageY;
+        scrollLeft = canvas.scrollLeft;
+        scrollTop = canvas.scrollTop;
+      });
+      window.addEventListener("mouseup", () => { isDown = false; });
+      window.addEventListener("mousemove", (e) => {
+        if(!isDown || !canvas) return;
+        const dx = e.pageX - startX;
+        const dy = e.pageY - startY;
+        canvas.scrollLeft = scrollLeft - dx;
+        canvas.scrollTop = scrollTop - dy;
+      });
+
+      // Print / Share (use current PDF url)
+      const currentPdfUrl = pdfFrame.getAttribute("src");
+
+      printBtn?.addEventListener("click", () => {
+        const w = window.open(currentPdfUrl, "_blank");
+        if (w) w.onload = () => { try { w.print(); } catch(e) {} };
+      });
+
+      shareBtn?.addEventListener("click", async () => {
+        const url = currentPdfUrl.startsWith("http")
+          ? currentPdfUrl
+          : (location.origin + currentPdfUrl);
+
+        try{
+          if(navigator.share) await navigator.share({ title: "شجرة العائلة (PDF)", url });
+          else {
+            await navigator.clipboard.writeText(url);
+            alert("تم نسخ رابط الملف");
+          }
+        } catch(e) {}
+      });
+
+      applyZoom();
+    })();
+  </script>
 </body>
 </html>
+

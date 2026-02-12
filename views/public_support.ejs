@@ -2,73 +2,393 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><%= page?.title || "الدعم" %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= page?.title || "الدعم" %> - شجرة العائلة</title>
+
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css"/>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f637a",
+            accent: "#cfae61",
+            gold: "#cfae61",
+            "background-light": "#f8f8f6",
+            "background-dark": "#0F1115",
+            "bg-charcoal": "#0F1115",
+            "bg-card": "#16191E",
+            "text-cream": "#FDFBF7",
+            "muted-slate": "#94A3B8",
+            "accent-gold-dark": "#D4AF37",
+            "paper-light": "#ffffff",
+            "paper-dark": "#1e282c",
+            "field-light": "#f8fafc",
+            "field-dark": "#131c1f",
+          },
+          fontFamily: {
+            display: ["Cairo", "sans-serif"],
+            amiri: ["Amiri", "serif"],
+          },
+          backgroundImage: {
+            "islamic-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        },
+      },
+    };
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .bank-pattern{
+      background-color: transparent;
+      background-image:
+        radial-gradient(rgba(31,99,122,.10) 0.5px, transparent 0.5px),
+        radial-gradient(rgba(31,99,122,.10) 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
+    .dark .bank-pattern{
+      background-image:
+        radial-gradient(rgba(207,174,97,.10) 0.5px, transparent 0.5px),
+        radial-gradient(rgba(207,174,97,.10) 0.5px, transparent 0.5px);
+    }
+
+    html.dark .dark-toggle-icon-moon { display: none; }
+    html:not(.dark) .dark-toggle-icon-sun { display: none; }
+  </style>
+
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+
+      const obs = new MutationObserver(() => {
+        const t = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title"><%= page?.title || "" %></div>
-      <div class="subtitle"><%= page?.subtitle || "" %></div>
-    </div>
-  </div>
+<body class="bg-background-light dark:bg-bg-charcoal text-[#272522] dark:text-text-cream font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-gold selection:text-background-dark transition-colors duration-300">
 
-  <nav class="topnav">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink" href="/about">نبذة</a>
-    <a class="navLink" href="/honor">قائمة الشرف</a>
-    <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink active" href="/support">الدعم</a>
-  </nav>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin/login">لوحة الإدارة</a>
-  </div>
-</header>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+            <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+          </div>
 
-<main class="page">
-  <% if (sent) { %>
-    <div class="card" style="margin-bottom:12px">
-      <div class="cardBody" style="font-weight:900; color:#22c55e">✅ تم إرسال الرسالة بنجاح</div>
-    </div>
-  <% } %>
+          <div class="hidden sm:flex flex-col items-start">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]"><%= page?.title || "الدعم" %></span>
+          </div>
+        </div>
 
-  <div class="card" style="margin-bottom:12px">
-    <div class="cardHeader"><div style="font-weight:950">تعليمات</div></div>
-    <div class="cardBody">
-      <div class="muted" style="line-height:1.9">
-        <%= (page?.content || "اكتب تعليمات الدعم هنا من لوحة الإدارة.").replace(/\n/g, "<br>") %>
+        <div class="flex items-center gap-4 md:gap-8">
+          <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/about">نبذة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-bold text-accent dark:text-gold decoration-2 underline-offset-8 underline" href="/support">الدعم</a>
+          </nav>
+
+          <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
+            <button id="uiThemeBtn"
+              class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-gold/30 hover:bg-gray-50 dark:hover:bg-gold/10 transition-all"
+              type="button" title="تبديل المظهر">
+              <span class="material-symbols-outlined text-gray-600 dark-toggle-icon-moon">dark_mode</span>
+              <span class="material-symbols-outlined text-gold dark-toggle-icon-sun">light_mode</span>
+            </button>
+
+            <a href="/admin/login"
+              class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
+                     dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10
+                     flex items-center justify-center"
+              title="تسجيل الدخول">
+              <span class="material-symbols-outlined text-[22px]">login</span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">نموذج الإرسال</div></div>
-    <div class="cardBody">
-      <form method="post" action="/support/send">
-        <label>الاسم</label>
-        <input class="input" name="sender_name" required>
+  <main class="flex-1">
+    <section class="relative bg-islamic-pattern">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
 
-        <label>رقم التواصل (اختياري)</label>
-        <input class="input" name="phone">
+        <% if (sent) { %>
+          <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200 shadow-sm">
+            <div class="flex items-center gap-2 font-extrabold">
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>✅ تم إرسال الرسالة بنجاح</span>
+            </div>
+          </div>
+        <% } %>
 
-        <label>الرسالة</label>
-        <textarea class="input" name="message" rows="5" required></textarea>
-
-        <div class="btnRow">
-          <button class="primaryBtn" type="submit">إرسال</button>
-          <a class="ghostBtn" href="/" style="text-decoration:none">رجوع</a>
+        <div class="flex flex-col gap-3 mb-10">
+          <h1 class="text-3xl md:text-4xl font-extrabold leading-tight text-[#121617] dark:text-white">
+            <%= page?.title || "الدعم والشكاوى" %>
+          </h1>
+          <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl leading-relaxed">
+            <%= page?.subtitle || "نحن هنا للاستماع إليكم. مشاركتكم تساهم في تطوير منصة العائلة وتعزيز الروابط بيننا." %>
+          </p>
         </div>
-      </form>
-    </div>
-  </div>
-</main>
 
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+          <!-- Left: Form Card -->
+          <div class="flex-1 w-full rounded-2xl bg-white dark:bg-paper-dark shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div class="p-6 lg:p-8 flex flex-col gap-6">
+
+              <div class="rounded-xl bg-background-light/70 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 p-5">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary dark:text-gold">
+                    <span class="material-symbols-outlined">info</span>
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-bold text-[#121617] dark:text-white">تعليمات</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">يرجى الاطلاع قبل الإرسال</p>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <%= (page?.content || "اكتب تعليمات الدعم هنا من لوحة الإدارة.").replace(/\n/g,"<br>") %>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 border-b border-gray-200 dark:border-white/10 pb-4 mb-2">
+                <div class="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary dark:text-gold">
+                  <span class="material-symbols-outlined">mail</span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-[#121617] dark:text-white">نموذج التواصل</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">يرجى ملء البيانات التالية بدقة</p>
+                </div>
+              </div>
+
+              <form method="post" action="/support/send" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- نفس كود الفورم عندك بدون تعديل -->
+                <label class="flex flex-col gap-2">
+                  <span class="text-sm font-bold text-[#121617] dark:text-gray-200">الاسم</span>
+                  <div class="relative">
+                    <span class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-400 dark:text-gold/60 material-symbols-outlined text-[20px]">person</span>
+                    <input name="sender_name" required
+                      class="w-full rounded-lg bg-field-light dark:bg-field-dark border border-[#e2e8f0] dark:border-white/10 h-12 pl-11 pr-4 text-[#121617] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:focus:ring-gold/30 focus:border-primary dark:focus:border-gold transition-all text-base"
+                      placeholder="أدخل اسمك الكريم" type="text"/>
+                  </div>
+                </label>
+
+                <label class="flex flex-col gap-2">
+                  <span class="text-sm font-bold text-[#121617] dark:text-gray-200">رقم التواصل (اختياري)</span>
+                  <div class="relative">
+                    <span class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-400 dark:text-gold/60 material-symbols-outlined text-[20px]">call</span>
+                    <input name="phone"
+                      class="w-full rounded-lg bg-field-light dark:bg-field-dark border border-[#e2e8f0] dark:border-white/10 h-12 pl-11 pr-4 text-[#121617] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:focus:ring-gold/30 focus:border-primary dark:focus:border-gold transition-all text-base dir-ltr text-right"
+                      placeholder="05xxxxxxxx" type="tel"/>
+                  </div>
+                </label>
+
+                <label class="flex flex-col gap-2 md:col-span-2">
+                  <span class="text-sm font-bold text-[#121617] dark:text-gray-200">الرسالة</span>
+                  <textarea name="message" rows="6" required
+                    class="w-full rounded-lg bg-field-light dark:bg-field-dark border border-[#e2e8f0] dark:border-white/10 min-h-[160px] p-4 text-[#121617] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 dark:focus:ring-gold/30 focus:border-primary dark:focus:border-gold transition-all text-base resize-y"
+                    placeholder="اكتب تفاصيل الشكوى أو المقترح هنا..."></textarea>
+                </label>
+
+                <div class="md:col-span-2 flex flex-col sm:flex-row gap-3 sm:justify-end pt-2">
+                  <button class="w-full sm:w-auto min-w-[160px] h-12 bg-primary hover:bg-[#164a5c] text-white rounded-lg font-bold text-base shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group
+                           dark:bg-gold dark:text-background-dark dark:hover:bg-white" type="submit">
+                    <span>إرسال الطلب</span>
+                    <span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform rtl:rotate-180">send</span>
+                  </button>
+
+                  <a class="w-full sm:w-auto min-w-[140px] h-12 rounded-lg font-bold text-base border border-gray-200 dark:border-white/10
+                           bg-white hover:bg-gray-50 text-gray-700 transition-all flex items-center justify-center
+                           dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10" href="/">
+                    رجوع
+                  </a>
+                </div>
+              </form>
+
+            </div>
+          </div>
+
+          <!-- Right: Sidebar -->
+          <div class="w-full lg:w-[360px] shrink-0 flex flex-col gap-6">
+
+            <% const fundName = (page?.fund_name || "").trim(); %>
+            <% const bankName = (page?.bank_name || "").trim(); %>
+            <% const accNum = (page?.account_number || "").trim(); %>
+
+            <!-- Family fund card -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-[#154657] text-white shadow-xl">
+              <div class="absolute inset-0 opacity-10 pointer-events-none bank-pattern"></div>
+              <div class="absolute -right-12 -top-12 size-40 rounded-full bg-white/5 blur-3xl"></div>
+              <div class="absolute -left-12 -bottom-12 size-40 rounded-full bg-gold/20 blur-3xl"></div>
+
+              <div class="relative p-6 flex flex-col gap-6">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <h3 class="text-lg font-bold text-white/90">صندوق العائلة</h3>
+                    <p class="text-xs text-white/60 mt-1 font-medium"><%= bankName ? ("البنك: " + bankName) : "مساهمتكم دعم لمستقبلنا" %></p>
+                  </div>
+                  <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                    <span class="material-symbols-outlined text-gold">account_balance</span>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-black/20 rounded-xl p-4 backdrop-blur-md border border-white/5">
+                    <p class="text-[10px] uppercase tracking-wider text-white/50 mb-1">اسم الحساب</p>
+                    <p class="font-bold text-lg tracking-wide"><%= fundName || "—" %></p>
+                  </div>
+
+                  <button type="button" id="ibanCopy"
+                    class="text-right w-full bg-black/20 rounded-xl p-4 backdrop-blur-md border border-white/5 group relative transition-colors hover:bg-black/30">
+                    <div class="flex justify-between items-center mb-1">
+                      <p class="text-[10px] uppercase tracking-wider text-white/50">رقم الحساب / الآيبان</p>
+                      <span id="ibanHint" class="text-[10px] text-gold opacity-0 group-hover:opacity-100 transition-opacity">نسخ</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                      <p id="ibanText" class="font-mono text-lg tracking-wider dir-ltr"><%= accNum || "—" %></p>
+                      <span class="material-symbols-outlined text-white/70 text-sm">content_copy</span>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 text-xs text-white/60 pt-2 border-t border-white/10">
+                  <span class="material-symbols-outlined text-sm">verified_user</span>
+                  <span>حساب موثق وآمن</span>
+                </div>
+              </div>
+            </div>
+
+            <% 
+              const waRaw = (page?.whatsapp || "").trim();
+              const waDigits = waRaw.replace(/[^\d]/g, "");
+              const waHref = waDigits ? ("https://wa.me/" + waDigits) : "#";
+              const waLabel = waRaw ? ("+" + waDigits) : "";
+              const email = (page?.email || "").trim();
+              const emailHref = email ? ("mailto:" + email) : "#";
+            %>
+
+            <!-- Other channels -->
+            <div class="bg-field-light dark:bg-paper-dark border border-[#e2e8f0] dark:border-white/10 rounded-xl p-5">
+              <h4 class="font-bold text-[#121617] dark:text-white mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary dark:text-gold text-xl">headset_mic</span>
+                قنوات أخرى للتواصل
+              </h4>
+
+              <ul class="space-y-3">
+                <li>
+                  <a class="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-field-dark hover:shadow-md transition-shadow border border-transparent hover:border-[#e2e8f0] dark:hover:border-white/10"
+                     href="<%= waHref %>" target="<%= waDigits ? '_blank' : '_self' %>">
+                    <div class="size-8 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366]">
+                      <svg class="size-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.05 20.16C10.52 20.16 9.02 19.75 7.72 18.97L7.42 18.78L4.31 19.6L5.14 16.55L4.95 16.24C4.12 14.92 3.69 13.43 3.69 11.91C3.69 7.31 7.44 3.56 12.04 3.56C14.27 3.56 16.37 4.43 17.95 6.01C19.53 7.59 20.4 9.69 20.4 11.92C20.4 16.52 16.65 20.16 12.05 20.16Z"></path>
+                      </svg>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-[#121617] dark:text-gray-200">واتساب العائلة</span>
+                      <span class="text-xs text-gray-500 dir-ltr text-right"><%= waDigits ? ("+" + waDigits) : "غير متوفر" %></span>
+                    </div>
+                  </a>
+                </li>
+
+                <li>
+                  <a class="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-field-dark hover:shadow-md transition-shadow border border-transparent hover:border-[#e2e8f0] dark:hover:border-white/10"
+                     href="<%= emailHref %>">
+                    <div class="size-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                      <span class="material-symbols-outlined text-[20px]">alternate_email</span>
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-sm font-bold text-[#121617] dark:text-gray-200">البريد الإلكتروني</span>
+                      <span class="text-xs text-gray-500"><%= email || "غير متوفر" %></span>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
+      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+          © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const btn = document.getElementById("uiThemeBtn");
+      function applyTheme(next) {
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+        localStorage.setItem("theme", next);
+      }
+      btn?.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+      applyTheme(localStorage.getItem("theme") || "dark");
+    })();
+
+    // Copy IBAN / Account
+    (function(){
+      const btn = document.getElementById("ibanCopy");
+      const textEl = document.getElementById("ibanText");
+      const hint = document.getElementById("ibanHint");
+
+      btn?.addEventListener("click", async () => {
+        const t = (textEl?.textContent || "").trim();
+        if (!t || t === "—") return;
+
+        try {
+          await navigator.clipboard.writeText(t);
+          if (hint) hint.textContent = "تم النسخ ✓";
+          setTimeout(() => { if (hint) hint.textContent = "نسخ"; }, 1500);
+        } catch(e){
+          const ta = document.createElement("textarea");
+          ta.value = t;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          if (hint) hint.textContent = "تم النسخ ✓";
+          setTimeout(() => { if (hint) hint.textContent = "نسخ"; }, 1500);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
+

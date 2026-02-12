@@ -1,59 +1,214 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><%= mode==="new" ? "إضافة عنصر شرف" : "تعديل عنصر شرف" %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= mode === "edit" ? "تعديل عنصر السير الذاتية" : "إضافة السير الذاتية" %></title>
+
   <script src="/theme.js"></script>
-  <link rel="stylesheet" href="/styles.css"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f637a",
+            accent: "#E3C56F",
+            "background-light": "#FBF9F6",
+            "background-dark": "#0F1115",
+            "surface-dark": "#1A1D21",
+            "border-dark": "#2D3139",
+            "primary-dark": "#C5A854",
+          },
+          fontFamily: { display: ["Cairo", "sans-serif"] },
+          borderRadius: { "2xl": "1rem" }
+        }
+      }
+    };
+  </script>
+
+  <script>
+    (function () {
+      const t = document.documentElement.getAttribute("data-theme") || localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.classList.toggle("dark", t === "dark");
+      const obs = new MutationObserver(() => {
+        const next = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", next === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title"><%= mode==="new" ? "إضافة عنصر شرف" : "تعديل عنصر شرف" %></div>
-      <div class="subtitle">بيانات كارت قائمة الشرف</div>
-    </div>
-  </div>
+<body class="font-display antialiased bg-background-light text-slate-800 dark:bg-background-dark dark:text-slate-300">
+  <main class="min-h-screen p-4 sm:p-8">
+    <div class="max-w-5xl mx-auto">
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin/honor">رجوع</a>
-  </div>
-</header>
-
-<div class="page">
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">البيانات</div></div>
-    <div class="cardBody">
-
-      <form method="post" action="<%= mode==='new' ? '/admin/honor/new' : ('/admin/honor/' + item.id + '/edit') %>">
-        <label>الاسم</label>
-        <input class="input" name="name" required value="<%= item?.name || '' %>">
-
-        <label>المجال</label>
-        <input class="input" name="field" value="<%= item?.field || '' %>">
-
-        <label>الإنجاز/الوصف</label>
-        <textarea class="input" name="achievement" rows="4"><%= item?.achievement || '' %></textarea>
-
-        <label>رابط الصورة (اختياري)</label>
-        <input class="input" name="photo_url" value="<%= item?.photo_url || '' %>" placeholder="/uploads/xxx.jpg أو رابط خارجي">
-
-        <label>الترتيب (ord)</label>
-        <input class="input" name="ord" type="number" value="<%= item?.ord || 1 %>">
-
-        <div class="btnRow">
-          <button class="primaryBtn" type="submit">حفظ</button>
-          <a class="ghostBtn" href="/admin/honor" style="text-decoration:none">إلغاء</a>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-black text-slate-900 dark:text-white">
+            <%= mode === "edit" ? "تعديل العنصر" : "إضافة عنصر جديد" %>
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-500 mt-1">أدخل الاسم والمجال والنبذة والإنجاز والترتيب ورابط الصورة.</p>
         </div>
-      </form>
+
+        <a href="/admin/honor"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+                  dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:bg-white/5">
+          <span class="material-symbols-outlined">arrow_forward</span>
+          رجوع
+        </a>
+      </div>
+
+      <section class="rounded-2xl border bg-white border-slate-100 shadow-[0_10px_30px_rgba(0,0,0,0.05)]
+                      dark:bg-surface-dark dark:border-border-dark overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-border-dark flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-accent">workspace_premium</span>
+            <h2 class="font-extrabold text-slate-800 dark:text-white">بيانات العنصر</h2>
+          </div>
+
+          <span class="text-xs text-slate-500 dark:text-slate-500">
+            <%= mode === "edit" ? "تعديل" : "إضافة" %>
+          </span>
+        </div>
+
+        <form method="post" action="<%= mode === 'edit' ? ('/admin/honor/' + item.id + '/edit') : '/admin/honor/new' %>" class="p-6 space-y-6">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">الاسم</label>
+              <input name="name" required value="<%= item?.name || '' %>"
+                     class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                            focus:border-primary focus:ring-0
+                            dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"/>
+            </div>
+
+            <div>
+              <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">المجال</label>
+              <input name="field" value="<%= item?.field || '' %>"
+                     class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                            focus:border-primary focus:ring-0
+                            dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"/>
+            </div>
+          </div>
+
+          <!-- ✅ النبذة -->
+          <div>
+            <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">النبذة</label>
+            <textarea name="bio" rows="4"
+                      class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                             focus:border-primary focus:ring-0
+                             dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"
+                      placeholder="اكتب نبذة مختصرة..."><%= item?.bio || '' %></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">الإنجاز / الوصف</label>
+            <textarea name="achievement" rows="5"
+                      class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                             focus:border-primary focus:ring-0
+                             dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"><%= item?.achievement || '' %></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">رابط الصورة (اختياري)</label>
+              <input id="photoUrlInput" name="photo_url" value="<%= item?.photo_url || '' %>"
+                     placeholder="/uploads/xxx.jpg/ أو رابط خارجي"
+                     class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                            focus:border-primary focus:ring-0
+                            dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"/>
+              <p class="text-xs text-slate-500 dark:text-slate-500 mt-2">يمكن رفع صورة وسيتم حفظها داخل public/uploads/</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">الترتيب (ORD)</label>
+              <input type="number" name="ord" value="<%= (item?.ord ?? 1) %>"
+                     class="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium
+                            focus:border-primary focus:ring-0
+                            dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent"/>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-extrabold hover:bg-primary/90 active:scale-[0.99]
+                           dark:bg-accent dark:text-black dark:hover:bg-primary-dark">
+              <span class="material-symbols-outlined">save</span>
+              حفظ
+            </button>
+
+            <a href="/admin/honor"
+               class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+                      dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:bg-white/5">
+              <span class="material-symbols-outlined">close</span>
+              إلغاء
+            </a>
+
+            <button id="uploadBtn" type="button"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+                           dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:bg-white/5">
+              <span class="material-symbols-outlined">upload</span>
+              رفع صورة
+            </button>
+
+            <button id="clearPhotoBtn" type="button"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+                           dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:bg-white/5">
+              <span class="material-symbols-outlined">delete</span>
+              مسح
+            </button>
+
+            <input id="photoFileInput" type="file" accept="image/*" class="hidden"/>
+          </div>
+
+        </form>
+      </section>
 
     </div>
-  </div>
-</div>
+  </main>
 
+  <script>
+    (function(){
+      const uploadBtn = document.getElementById("uploadBtn");
+      const fileInput = document.getElementById("photoFileInput");
+      const photoUrl = document.getElementById("photoUrlInput");
+      const clearBtn = document.getElementById("clearPhotoBtn");
+
+      uploadBtn?.addEventListener("click", () => fileInput?.click());
+
+      clearBtn?.addEventListener("click", () => {
+        if (photoUrl) photoUrl.value = "";
+      });
+
+      fileInput?.addEventListener("change", async () => {
+        if (!fileInput.files || !fileInput.files[0]) return;
+
+        const fd = new FormData();
+        fd.append("photo", fileInput.files[0]);
+
+        try {
+          const res = await fetch("/admin/upload", { method: "POST", body: fd });
+          if (!res.ok) throw new Error("Upload failed");
+          const data = await res.json();
+          if (photoUrl) photoUrl.value = data.url || "";
+        } catch (e) {
+          alert("تعذر رفع الصورة");
+        } finally {
+          fileInput.value = "";
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
+

@@ -2,88 +2,381 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>شجرة العائلة</title>
 
-  <!-- Theme must load early -->
+  <!-- OLD: Theme must load early -->
   <script src="/theme.js"></script>
 
-  <link rel="stylesheet" href="/styles.css"/>
+  <!-- NEW: Fonts + Material Symbols + Tailwind -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#1f637a",
+            "background-light": "#f8f8f6",
+            "background-dark": "#131c1f",
+            "accent-gold": "#E3C56F",
+            "text-dark": "#272522",
+            "text-muted": "#677c83",
+            "wood": "#8B5E3C",
+            "leaf-green": "#4CAF50",
+
+            "bg-charcoal": "#0F1115",
+            "bg-card": "#16191E",
+            "text-cream": "#FDFBF7",
+            "muted-slate": "#94A3B8",
+            "accent-gold-dark": "#D4AF37",
+          },
+          fontFamily: {
+            "display": ["Cairo", "sans-serif"],
+            "amiri": ["Amiri", "serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          backgroundImage: {
+            "islamic-pattern":
+              "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23E3C56F' fill-opacity='0.15' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0H0v20zM20 40L40 20H20v20zM20 0l20 20V0H20zM0 20l20 20H0V20z'/%3E%3C/g%3E%3C/svg%3E\")",
+            "islamic-pattern-dark":
+              "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D4AF37' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0H0v20zM20 40L40 20H20v20zM20 0l20 20V0H20zM0 20l20 20H0V20z'/%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        },
+      },
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    }
+  </style>
+
+  <style>
+    :root { --gold-glow: rgba(212, 175, 55, 0.4); }
+
+    .tree-container { position: relative; width: 100%; height: 100%; margin: 0 auto; }
+    .branch-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+
+    .node-portrait {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      border: 2px solid #8B5E3C;
+      background: white;
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+    }
+    .name-box {
+      background-color: #ffffff;
+      border: 1.5px solid #e5e7eb;
+      padding: 4px 16px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      margin-top: -12px;
+      position: relative;
+      z-index: 20;
+      min-width: 120px;
+      text-align: center;
+    }
+    .node-label-text { font-family: 'Amiri', serif; color: #272522; }
+    .leaf { fill: #4CAF50; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1)); }
+
+    html.dark .node-portrait {
+      width: 90px;
+      height: 90px;
+      border-radius: 4px;
+      border: 2px solid #D4AF37;
+      background: #16191E;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+    }
+    html.dark .name-box {
+      font-family: 'Amiri', serif;
+      margin-top: 4px;
+      text-align: center;
+      background-color: #16191E;
+      border: 1px solid #D4AF37;
+      padding: 6px 16px;
+      min-width: 140px;
+      border-radius: 2px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+    html.dark .leaf { fill: #D4AF37; opacity: 0.6; filter: none; }
+    html.dark .glowing-branch {
+      stroke: #D4AF37;
+      stroke-opacity: 0.6;
+      filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
+    }
+    .square-frame { border-radius: 4px !important; }
+  </style>
+
+  <!-- OLD: Keep old stylesheet path -->
+  <link rel="stylesheet" href="/styles.css" />
+
+  <!-- OLD: d3 -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <!-- Sync theme before paint -->
+  <script>
+    (function syncThemeBeforePaint() {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+
+      const obs = new MutationObserver(() => {
+        const t = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
 
-<body>
-  <header class="topbar">
-    <div class="brand">
-     <img class="brandLogo logoDark"  src="/assets/logo-dark.svg"  alt="شعار العائلة" />
-<img class="brandLogo logoLight" src="/assets/logo-light.svg" alt="شعار العائلة" />
+<body class="bg-background-light dark:bg-bg-charcoal text-text-dark dark:text-text-cream font-display min-h-screen flex flex-col relative overflow-x-hidden selection:bg-accent-gold selection:text-white dark:selection:text-bg-charcoal">
 
-      <div class="brandText">
-        <div class="title">شجرة العائلة</div>
-        <div class="subtitle">اضغط على أي شخص لتفعيل وضع التركيز، واسحب للتنقل</div>
+  <!-- HEADER -->
+  <header class="bg-white dark:bg-bg-charcoal/95 dark:backdrop-blur-md border-b border-gray-100 dark:border-accent-gold/20 sticky top-0 z-50 shadow-sm/50 dark:shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+
+        <!-- (3) removed square icon badge completely -->
+        <div class="flex items-center gap-4">
+          <!-- OLD: Preserve logo paths -->
+          <div class="flex items-center gap-3">
+            <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+            <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+          </div>
+
+          <div class="hidden sm:flex flex-col items-start">
+            <h1 class="text-xl font-extrabold text-primary dark:text-accent-gold-dark leading-none tracking-tight">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent-gold dark:text-accent-gold/70 uppercase tracking-[0.2em]">اضغط على أي شخص لتفعيل وضع التركيز</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-4 lg:gap-8">
+          <!-- OLD: Preserve nav paths -->
+          <nav class="hidden md:flex gap-6 lg:gap-8" aria-label="التنقل الرئيسي">
+            <a class="text-sm font-semibold text-text-dark dark:text-text-cream hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
+               href="/">الشجرة</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
+               href="/about">نبذة</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
+               href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
+               href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
+               href="/support">الدعم</a>
+          </nav>
+
+          <div class="flex items-center gap-2 dark:border-r dark:border-accent-gold/20 dark:pr-4 md:dark:pr-8">
+            <!-- (1) Theme toggle now instant (no refresh) -->
+            <button id="uiThemeBtn"
+                    class="p-2.5 rounded-full text-text-dark dark:text-accent-gold-dark hover:bg-gray-100 dark:hover:bg-accent-gold/10 transition-colors flex items-center justify-center border border-transparent hover:border-gray-200 dark:border-accent-gold/30 dark:hover:border-accent-gold/50"
+                    type="button"
+                    title="تبديل المظهر">
+              <span class="material-symbols-outlined text-[22px] dark:hidden">dark_mode</span>
+              <span class="material-symbols-outlined text-[20px] hidden dark:inline">light_mode</span>
+            </button>
+
+            <!-- (2) Replace admin text with login icon (same path) -->
+            <a href="/admin/login"
+               class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
+                      dark:bg-accent-gold-dark dark:text-bg-charcoal dark:hover:bg-white dark:shadow-accent-gold/10
+                      flex items-center justify-center"
+               title="تسجيل الدخول">
+              <span class="material-symbols-outlined text-[22px]">login</span>
+            </a>
+
+            <!-- (4) Removed menu / side dots button entirely -->
+
+            <!-- OLD: Hidden themeToggle for app.js (kept for compatibility) -->
+            <button id="themeToggle" type="button" class="hidden" aria-pressed="true">الوضع: داكن</button>
+          </div>
+        </div>
+
       </div>
-    </div>
-
-    <nav class="topnav" aria-label="التنقل الرئيسي">
-      <a class="navLink active" href="/">الشجرة</a>
-      <a class="navLink" href="/about">نبذة</a>
-      <a class="navLink" href="/honor">قائمة الشرف</a>
-      <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-      <a class="navLink" href="/support">الدعم</a>
-    </nav>
-
-    <div class="actions">
-      <button id="themeToggle" class="adminBtn" type="button" aria-pressed="true">الوضع: داكن</button>
-      <a class="adminBtn" href="/admin/login">لوحة الإدارة</a>
     </div>
   </header>
 
-  <main class="workspace">
-    <aside id="drawer" class="drawer">
-      <div class="drawerHeader">
-        <div>
-          <div class="drawerTitle">بيانات الشخص</div>
-          <div class="drawerSub">تظهر عند اختيار أي شخص من الشجرة</div>
-        </div>
-        <button id="closeDrawer" class="iconBtn" type="button" aria-label="إغلاق">×</button>
-      </div>
+  <!-- MAIN -->
+  <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 dark:py-10 flex flex-col gap-8">
 
-      <div id="details" class="drawerBody muted">
-        اختر شخصاً من الشجرة.
-      </div>
-    </aside>
-
-    <section class="canvasCard">
-      <div class="toolbar">
-        <div class="toolgroup">
-          <input id="search" class="search" placeholder="بحث بالاسم..." />
-          <button id="resetView" class="ghostBtn" type="button">عرض الشجرة كاملة</button>
-          <button id="focusMode" class="ghostBtn" type="button" title="يظهر الشخص + الآباء + الأبناء">وضع التركيز</button>
+    <div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-bg-card p-2 rounded-2xl dark:square-frame shadow-sm dark:shadow-lg border border-gray-100/80 dark:border-accent-gold/10">
+      <label class="flex-grow w-full md:w-auto relative group">
+        <div class="absolute inset-y-0 start-0 ps-4 flex items-center pointer-events-none">
+          <span class="material-symbols-outlined text-text-muted dark:text-muted-slate group-focus-within:text-primary dark:group-focus-within:text-accent-gold-dark transition-colors">search</span>
         </div>
 
-        <div class="toolgroup">
-          <button id="zoomOut" class="iconBtn" type="button" title="تصغير">−</button>
-          <button id="zoomIn" class="iconBtn" type="button" title="تكبير">+</button>
-          <button id="fit" class="ghostBtn" type="button">ملاءمة</button>
-          <button id="toggleDetails" class="primaryBtn" type="button">التفاصيل</button>
-        </div>
+        <input id="search"
+               class="block w-full ps-12 pe-4 py-3.5 bg-background-light dark:bg-bg-charcoal border-transparent dark:border-accent-gold/10 text-text-dark dark:text-text-cream placeholder-text-muted dark:placeholder-text-muted focus:border-primary/20 dark:focus:border-accent-gold-dark focus:bg-white dark:focus:bg-bg-charcoal focus:ring-0 rounded-xl dark:square-frame transition-all font-medium"
+               placeholder="ابحث عن أحد أفراد العائلة..."
+               type="text" />
+      </label>
+
+      <button id="resetView"
+              class="w-full md:w-auto flex items-center justify-center gap-2 bg-primary dark:bg-accent-gold-dark text-white dark:text-bg-charcoal px-8 py-3.5 rounded-xl dark:square-frame font-bold hover:bg-[#185366] dark:hover:bg-white transition-all shadow-md shadow-primary/20 dark:shadow-accent-gold/10 hover:shadow-lg hover:shadow-primary/30 dark:hover:shadow-accent-gold/20 active:scale-[0.98]"
+              type="button">
+        <span class="material-symbols-outlined">account_tree</span>
+        <span class="dark:hidden">عرض الشجرة الكاملة</span>
+        <span class="hidden dark:inline">استكشاف الشجرة</span>
+      </button>
+    </div>
+
+    <div class="flex flex-wrap gap-2 justify-center md:justify-end">
+      <button id="zoomOut" type="button"
+              class="p-2.5 rounded-full border border-gray-200 dark:border-accent-gold/30 text-text-dark dark:text-accent-gold-dark hover:bg-white dark:hover:bg-accent-gold/10 transition-colors"
+              title="تصغير">
+        <span class="material-symbols-outlined text-[20px]">zoom_out</span>
+      </button>
+      <button id="zoomIn" type="button"
+              class="p-2.5 rounded-full border border-gray-200 dark:border-accent-gold/30 text-text-dark dark:text-accent-gold-dark hover:bg-white dark:hover:bg-accent-gold/10 transition-colors"
+              title="تكبير">
+        <span class="material-symbols-outlined text-[20px]">zoom_in</span>
+      </button>
+      <button id="fit" type="button"
+              class="px-4 py-2 rounded-xl dark:square-frame font-bold border border-gray-200 dark:border-accent-gold/30 text-text-dark dark:text-accent-gold-dark hover:bg-white dark:hover:bg-accent-gold/10 transition-colors"
+              title="ملاءمة">
+        ملاءمة
+      </button>
+      <button id="focusMode" type="button"
+              class="px-4 py-2 rounded-xl dark:square-frame font-bold border border-gray-200 dark:border-accent-gold/30 text-text-dark dark:text-accent-gold-dark hover:bg-white dark:hover:bg-accent-gold/10 transition-colors"
+              title="وضع التركيز">
+        وضع التركيز
+      </button>
+      <button id="toggleDetails" type="button"
+              class="px-4 py-2 rounded-xl dark:square-frame font-bold bg-primary dark:bg-accent-gold-dark text-white dark:text-bg-charcoal hover:bg-[#185366] dark:hover:bg-white transition-colors shadow-md dark:shadow-accent-gold/10 active:scale-[0.98]"
+              title="التفاصيل">
+        التفاصيل
+      </button>
+    </div>
+
+    <section class="relative w-full bg-white dark:bg-bg-card rounded-3xl dark:square-frame shadow-xl dark:shadow-2xl shadow-gray-200/50 overflow-hidden border border-accent-gold/20 dark:border-accent-gold/10 min-h-[650px] dark:min-h-[700px] flex flex-col">
+      <div class="absolute inset-0 bg-islamic-pattern dark:bg-islamic-pattern-dark opacity-40 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-white/80 via-transparent to-white/80 dark:from-bg-charcoal/40 dark:to-bg-charcoal/40 pointer-events-none"></div>
+
+      <div class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-x-auto scrollbar-hide">
+        <div id="tree" class="w-full h-[650px] dark:h-[700px]"></div>
       </div>
 
-      <div id="tree" class="treeCanvas"></div>
-
-      <div class="footnote">
+      <div class="px-6 pb-6 text-xs text-text-muted dark:text-muted-slate font-amiri">
         تلميح: عجلة الماوس للتكبير/التصغير، واضغط خارج الأشخاص للعودة للشجرة كاملة.
       </div>
     </section>
+
   </main>
 
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modalContent">
-      <button id="closeModal" class="close" aria-label="إغلاق">×</button>
-      <div id="modalBody"></div>
+  <!-- FOOTER -->
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
+      <div class="flex justify-center space-x-6 space-x-reverse md:order-2">
+        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Facebook">
+          <span class="sr-only">Facebook</span>
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"/></svg>
+        </a>
+        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Instagram">
+          <span class="sr-only">Instagram</span>
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.468 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" fill-rule="evenodd"/></svg>
+        </a>
+      </div>
+
+      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+          © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- OLD: Drawer + Modal IDs preserved for app.js -->
+  <aside id="drawer"
+         class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-bg-card border-l border-gray-200 dark:border-accent-gold/20 shadow-2xl z-[60] translate-x-full transition-transform duration-300"
+         aria-label="تفاصيل الشخص">
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-accent-gold/10">
+      <div>
+        <div class="font-extrabold text-primary dark:text-accent-gold-dark">بيانات الشخص</div>
+        <div class="text-xs text-text-muted dark:text-muted-slate font-amiri">تظهر عند اختيار أي شخص من الشجرة</div>
+      </div>
+      <button id="closeDrawer"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              type="button"
+              aria-label="إغلاق">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div id="details" class="p-4 text-sm text-text-muted dark:text-muted-slate font-amiri">
+      اختر شخصاً من الشجرة.
+    </div>
+  </aside>
+
+  <div id="modal" class="fixed inset-0 z-[70] hidden" role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-black/40" id="modalBackdrop"></div>
+    <div class="relative max-w-2xl mx-auto mt-10 sm:mt-16 bg-white dark:bg-bg-card border border-gray-200 dark:border-accent-gold/20 rounded-2xl dark:square-frame shadow-2xl p-4 sm:p-6">
+      <button id="closeModal"
+              class="absolute top-3 left-3 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="إغلاق"
+              type="button">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div id="modalBody" class="text-text-dark dark:text-text-cream font-amiri"></div>
     </div>
   </div>
 
+  <style>
+    #drawer.isOpen { transform: translateX(0); }
+    #modal.hidden { display: none; }
+    #modal:not(.hidden) { display: block; }
+  </style>
+
+  <script>
+    // (1) Instant theme toggle without refresh (no dependency on app.js click handlers)
+    (function instantThemeToggle() {
+      const btn = document.getElementById("uiThemeBtn");
+      const hiddenBtn = document.getElementById("themeToggle");
+
+      function applyTheme(next) {
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+        localStorage.setItem("theme", next);
+        if (hiddenBtn) hiddenBtn.textContent = next === "light" ? "الوضع: فاتح" : "الوضع: داكن";
+      }
+
+      btn?.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        const next = current === "dark" ? "light" : "dark";
+        applyTheme(next);
+      });
+
+      // Ensure correct on load
+      const saved = localStorage.getItem("theme") || "dark";
+      applyTheme(saved);
+    })();
+
+    // Keep backdrop close (app.js closes on #modal click; we also close on backdrop)
+    (function modalBackdropClickFix() {
+      const modal = document.getElementById("modal");
+      const backdrop = document.getElementById("modalBackdrop");
+      backdrop?.addEventListener("click", () => modal?.classList.add("hidden"));
+    })();
+  </script>
+
+  <!-- OLD: app.js path preserved -->
   <script src="/app.js"></script>
+
 </body>
 </html>
+
+

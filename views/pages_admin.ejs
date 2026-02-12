@@ -1,105 +1,919 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>إدارة صفحات الموقع</title>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>إدارة الصفحات - نظام عائلة خاشقجي</title>
+
+  <!-- Theme must load early -->
   <script src="/theme.js"></script>
-  <link rel="stylesheet" href="/styles.css"/>
+
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            /* LIGHT */
+            "primary": "#1f637a",
+            "accent": "#E3C56F",
+            "background-light": "#FBF9F6",
+            "surface": "#ffffff",
+
+            /* DARK */
+            "background-dark": "#0F1115",
+            "surface-dark": "#1A1D21",
+            "border-dark": "#2D3139",
+            "primary-dark": "#C5A854",
+          },
+          fontFamily: { "display": ["Cairo", "sans-serif"] },
+          borderRadius: {
+            "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"
+          },
+        }
+      }
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer base {
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+      html.dark ::-webkit-scrollbar-track { background: #0F1115; }
+      html.dark ::-webkit-scrollbar-thumb { background: #2D3139; }
+      html.dark ::-webkit-scrollbar-thumb:hover { background: #E3C56F; }
+    }
+
+    .sidebar-pattern {
+      background-color: #ffffff;
+      background-image:
+        radial-gradient(#1f637a 0.5px, transparent 0.5px),
+        radial-gradient(#1f637a 0.5px, #ffffff 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      opacity: 0.03;
+    }
+
+    html.dark .sidebar-pattern {
+      background-color: transparent;
+      background-image:
+        radial-gradient(#E3C56F 0.5px, transparent 0.5px),
+        radial-gradient(#E3C56F 0.5px, transparent 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      opacity: 0.03;
+    }
+
+    html.dark .gold-glow { box-shadow: 0 0 20px rgba(227, 197, 111, 0.05); }
+
+    /* Dropzone helper */
+    .dzActive {
+      outline: 2px dashed rgba(31,99,122,0.55);
+      outline-offset: 6px;
+      background: rgba(31,99,122,0.04);
+    }
+    html.dark .dzActive {
+      outline: 2px dashed rgba(227,197,111,0.55);
+      background: rgba(227,197,111,0.06);
+    }
+  </style>
+
+  <!-- Sync theme: data-theme <-> class dark -->
+  <script>
+    (function () {
+      const t = document.documentElement.getAttribute("data-theme") || localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.classList.toggle("dark", t === "dark");
+
+      const obs = new MutationObserver(() => {
+        const next = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", next === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title">إدارة صفحات الموقع</div>
-      <div class="subtitle">تحكم في النبذة والدعم وصفحة PDF</div>
-    </div>
-  </div>
+<body class="font-display antialiased overflow-hidden selection:bg-primary/20 selection:text-primary
+             bg-background-light text-slate-800
+             dark:bg-background-dark dark:text-slate-300">
+<div class="flex h-screen w-full">
 
-  <nav class="topnav">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink" href="/about">نبذة</a>
-    <a class="navLink" href="/honor">قائمة الشرف</a>
-    <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink" href="/support">الدعم</a>
-  </nav>
+  <!-- SIDEBAR -->
+  <aside class="relative flex w-72 flex-col border-e z-20 hidden lg:flex
+                bg-white border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
+                dark:bg-surface-dark dark:border-border-dark dark:shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
+    <div class="absolute inset-0 sidebar-pattern pointer-events-none"></div>
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin">الأشخاص</a>
-    <a class="adminBtn" href="/admin/honor">إدارة الشرف</a>
-    <form method="post" action="/admin/logout" style="margin:0">
-      <button class="adminBtn" type="submit">تسجيل خروج</button>
-    </form>
-  </div>
-</header>
-
-<div class="page">
-  <% if (saved) { %>
-    <div class="card" style="margin-bottom:12px">
-      <div class="cardBody" style="font-weight:900; color:#22c55e">✅ تم حفظ التعديلات</div>
-    </div>
-  <% } %>
-
-  <div class="card" style="margin-bottom:12px">
-    <div class="cardHeader"><div style="font-weight:950">نبذة عن العائلة</div></div>
-    <div class="cardBody">
-      <form method="post" action="/admin/pages/save">
-        <input type="hidden" name="slug" value="about">
-        <label>العنوان</label>
-        <input class="input" name="title" value="<%= about?.title || '' %>">
-        <label>وصف مختصر</label>
-        <input class="input" name="subtitle" value="<%= about?.subtitle || '' %>">
-        <label>المحتوى (نص حر)</label>
-        <textarea class="input" name="content" rows="6"><%= about?.content || '' %></textarea>
-        <div class="btnRow">
-          <button class="primaryBtn" type="submit">حفظ</button>
-          <a class="ghostBtn" href="/about" style="text-decoration:none">عرض الصفحة</a>
+    <div class="relative z-10 flex items-center px-8 border-b
+                h-20 border-slate-50
+                dark:h-24 dark:border-border-dark/50">
+      <div class="flex items-center gap-3 dark:gap-4">
+        <div class="flex items-center justify-center size-10 rounded-lg bg-primary text-white
+                    dark:size-12 dark:rounded-xl dark:bg-gradient-to-br dark:from-accent dark:to-primary-dark dark:text-black dark:shadow-lg">
+          <span class="material-symbols-outlined dark:text-3xl">account_tree</span>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:12px">
-    <div class="cardHeader"><div style="font-weight:950">صفحة شجرة PDF</div></div>
-    <div class="cardBody">
-      <form method="post" action="/admin/pages/save">
-        <input type="hidden" name="slug" value="tree-pdf">
-        <label>العنوان</label>
-        <input class="input" name="title" value="<%= treepdf?.title || '' %>">
-        <label>وصف مختصر</label>
-        <input class="input" name="subtitle" value="<%= treepdf?.subtitle || '' %>">
-        <label>محتوى أعلى الـ PDF (نص حر)</label>
-        <textarea class="input" name="content" rows="5"><%= treepdf?.content || '' %></textarea>
-        <div class="btnRow">
-          <button class="primaryBtn" type="submit">حفظ</button>
-          <a class="ghostBtn" href="/tree-pdf" style="text-decoration:none">عرض الصفحة</a>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-primary dark:text-white dark:tracking-wide">عائلة خاشقجي</h1>
+          <p class="text-xs font-medium text-slate-400 dark:text-accent/70 dark:uppercase dark:tracking-widest dark:mt-0.5">
+            <span class="dark:hidden">نظام إدارة المحتوى</span>
+            <span class="hidden dark:inline">لوحة التحكم</span>
+          </p>
         </div>
-      </form>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">صفحة الدعم والشكاوى</div></div>
-    <div class="cardBody">
-      <form method="post" action="/admin/pages/save">
-        <input type="hidden" name="slug" value="support">
-        <label>العنوان</label>
-        <input class="input" name="title" value="<%= support?.title || '' %>">
-        <label>وصف مختصر</label>
-        <input class="input" name="subtitle" value="<%= support?.subtitle || '' %>">
-        <label>نص إضافي (مثلاً: إرشادات/قنوات تواصل)</label>
-        <textarea class="input" name="content" rows="6"><%= support?.content || '' %></textarea>
-        <div class="btnRow">
-          <button class="primaryBtn" type="submit">حفظ</button>
-          <a class="ghostBtn" href="/support" style="text-decoration:none">عرض الصفحة</a>
+    <nav class="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-8 dark:py-8">
+
+      <div class="flex flex-col gap-1 dark:gap-1.5">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
+          <span class="dark:hidden">القائمة الرئيسية</span>
+          <span class="hidden dark:inline">النظام الأساسي</span>
+        </p>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent dark:transition-all"
+           href="/admin">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">dashboard</span>
+          <span class="font-medium text-sm">لوحة التحكم</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent dark:transition-all"
+           href="/admin/honor">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">folder_open</span>
+          <span class="font-medium text-sm">إدارة السير الذاتية</span>
+        </a>
+      </div>
+
+      <div class="flex flex-col gap-1 dark:gap-1.5">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
+          <span class="dark:hidden">محتوى الصفحات</span>
+          <span class="hidden dark:inline">محتوى الموقع</span>
+        </p>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative overflow-hidden group
+                  bg-primary/5 text-primary ring-1 ring-primary/10 shadow-sm
+                  dark:bg-accent/10 dark:text-accent dark:ring-1 dark:ring-accent/20"
+           href="/admin/pages">
+          <div class="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-e-full
+                      bg-accent
+                      dark:bg-accent dark:shadow-[0_0_10px_rgba(227,197,111,0.5)]"></div>
+          <span class="material-symbols-outlined">history_edu</span>
+          <span class="font-bold text-sm">إدارة الصفحات</span>
+          <span class="ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border
+                       bg-white text-primary border-primary/10
+                       dark:bg-accent dark:text-black dark:border-transparent">
+            <span class="dark:hidden">تحرير</span>
+            <span class="hidden dark:inline">نشط</span>
+          </span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent dark:transition-all"
+           href="/about">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">history_edu</span>
+          <span class="font-medium text-sm">عرض النبذة</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent dark:transition-all"
+           href="/tree-pdf">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">account_tree</span>
+          <span class="font-medium text-sm">عرض PDF</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent dark:transition-all"
+           href="/support">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">volunteer_activism</span>
+          <span class="font-medium text-sm">عرض الدعم</span>
+        </a>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2">النظام</p>
+        <form method="post" action="/admin/logout" class="m-0">
+          <button type="submit"
+            class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors group text-start">
+            <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500 transition-colors">logout</span>
+            <span class="font-medium text-sm">تسجيل خروج</span>
+          </button>
+        </form>
+      </div>
+
+    </nav>
+
+    <div class="relative z-10 p-4 border-t border-slate-50 dark:border-border-dark/50 dark:p-6">
+      <button type="button" class="flex items-center gap-3 w-full p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-colors text-start">
+        <div class="size-10 rounded-full bg-cover bg-center ring-2 ring-white dark:ring-accent/30 shadow-sm dark:size-11 dark:border-2 dark:border-accent/30"
+             style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuDncTuOz-pCokbtv2AWGrnETeGCj6bw_3Yfp6Cf4KFfYwjf7b527Z6oBzc4xi8rdnavAMnlTiXiY86lIQnJqvAFEPN9EMi8fzy-KJD6ZbdslXGsAv_1gLmnmnl42lE2sp19OjaLphfnF05zwxf_-fh1bVDsGImSkKv2DtSUYMvSQmXsfThtsCZXaaCa0tgrN6lla2x2zDSo8e_7wajMsMBnASEm-Unu9luUwXjTPGRYXVGC_dnX6-v_66DSR6bs2O_KSqCSimiwTgU');"></div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-bold text-slate-800 dark:text-white truncate"><%= admin?.username || "مدير النظام" %></p>
+          <p class="text-xs text-slate-500 truncate dark:text-[11px]">مدير النظام</p>
         </div>
-      </form>
+        <span class="material-symbols-outlined text-slate-400 transform scale-x-[-1] dark:text-slate-500">logout</span>
+      </button>
     </div>
-  </div>
+  </aside>
 
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background-light dark:bg-background-dark">
+    <header class="flex items-center justify-between sticky top-0 z-20 backdrop-blur-md border-b
+                   h-20 px-8 bg-white/80 border-slate-200/60
+                   dark:h-24 dark:px-10 dark:bg-surface-dark/90 dark:border-border-dark dark:backdrop-blur-xl">
+      <div class="flex flex-col justify-center">
+        <div class="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1
+                    dark:text-slate-500 dark:text-[11px] dark:font-bold dark:uppercase dark:tracking-widest">
+          <span>الصفحات</span>
+          <span class="material-symbols-outlined text-[10px]">chevron_left</span>
+          <span class="dark:hidden">إدارة الصفحات</span>
+          <span class="hidden dark:inline text-accent/70">تحرير المحتوى</span>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
+          إدارة صفحات الموقع
+        </h2>
+      </div>
+
+      <div class="flex items-center gap-3 sm:gap-4 dark:gap-4">
+        <button id="themeBtn"
+          class="flex items-center justify-center size-10 rounded-lg shadow-sm group transition-colors
+                 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                 dark:bg-surface-dark dark:border-border-dark dark:text-accent dark:hover:border-accent dark:hover:bg-accent/10 dark:shadow-lg active:scale-95"
+          type="button" title="تبديل المظهر">
+          <span class="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
+          <span class="material-symbols-outlined text-[24px] hidden dark:block">light_mode</span>
+        </button>
+
+        <button id="saveAll"
+          class="flex items-center gap-2 text-sm font-bold rounded-lg transition-colors
+                 px-6 py-2 bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                 dark:px-8 dark:py-2.5 dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95"
+          type="button">
+          <span class="material-symbols-outlined text-[18px] dark:text-[20px]">save</span>
+          حفظ الكل
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-4 sm:p-8 dark:p-6 dark:sm:p-10">
+      <div class="max-w-6xl mx-auto space-y-6 dark:space-y-8 pb-20">
+
+        <% if (saved) { %>
+          <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-emerald-700 font-bold shadow-sm
+                      dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300 dark:gold-glow">
+            ✅ تم حفظ التعديلات
+          </div>
+        <% } %>
+
+        <!-- ABOUT FORM -->
+        <form id="formAbout" method="post" action="/admin/pages/save">
+          <input type="hidden" name="slug" value="about"/>
+
+          <section class="rounded-2xl overflow-hidden relative group border
+                          bg-white border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]
+                          dark:bg-surface-dark dark:border-border-dark dark:gold-glow">
+            <div class="absolute top-0 start-0 end-0 h-1 bg-gradient-to-l from-accent/40 via-accent to-accent/40 dark:h-[2px] dark:from-transparent dark:via-accent/50 dark:to-transparent"></div>
+
+            <div class="p-6 sm:p-8 dark:p-8">
+              <div class="flex items-center justify-between mb-6 dark:mb-8">
+                <div>
+                  <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 dark:text-xl dark:gap-3">
+                    <span class="material-symbols-outlined text-accent">edit_note</span>
+                    نبذة عن العائلة
+                  </h3>
+                  <p class="text-slate-500 text-sm mt-1 dark:text-slate-500 dark:mt-1.5 dark:font-medium">
+                    تحكم في عنوان ووصف ومحتوى صفحة النبذة.
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">العنوان</span>
+                  <input name="title" value="<%= about?.title || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">وصف مختصر</span>
+                  <input name="subtitle" value="<%= about?.subtitle || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+              </div>
+
+              <label class="block">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">المحتوى</span>
+                <textarea name="content"
+                  class="mt-1 w-full h-80 p-6 rounded-xl text-slate-700 bg-slate-50 border border-slate-200 focus:ring-0 focus:border-primary text-base leading-relaxed resize-y
+                         dark:h-[400px] dark:p-8 dark:text-slate-200 dark:bg-background-dark/30 dark:border-border-dark dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:text-lg dark:leading-loose dark:font-medium"
+                  placeholder="ابدأ كتابة تاريخ العائلة هنا..."><%= about?.content || "" %></textarea>
+              </label>
+
+              <div class="mt-5 flex items-center gap-3">
+                <button type="submit"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                         bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                         dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95">
+                  <span class="material-symbols-outlined text-[20px]">save</span>
+                  حفظ
+                </button>
+                <a href="/about"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                         bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                         dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:border-accent/50 dark:hover:text-accent">
+                  <span class="material-symbols-outlined text-[20px]">visibility</span>
+                  عرض
+                </a>
+              </div>
+            </div>
+          </section>
+        </form>
+
+        <!-- GRID: TREE PDF + SUPPORT -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 dark:gap-8">
+
+          <!-- TREE PDF FORM -->
+          <form id="formTreePdf" method="post" action="/admin/pages/save" class="h-full">
+            <input type="hidden" name="slug" value="tree-pdf"/>
+
+            <section class="rounded-2xl border p-6 sm:p-8 flex flex-col h-full
+                            bg-white border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]
+                            dark:bg-surface-dark dark:border-border-dark dark:gold-glow dark:p-8">
+              <div class="mb-6 dark:mb-8">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 dark:gap-3">
+                  <span class="material-symbols-outlined text-primary dark:text-accent">description</span>
+                  ملف شجرة العائلة (PDF)
+                </h3>
+                <p class="text-slate-500 text-sm mt-1 dark:text-slate-500 dark:mt-1.5 dark:font-medium">
+                  تحديث بيانات الصفحة + رفع ملف PDF (للأدمن فقط).
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 mb-5">
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">العنوان</span>
+                  <input name="title" value="<%= treepdf?.title || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">وصف مختصر</span>
+                  <input name="subtitle" value="<%= treepdf?.subtitle || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+              </div>
+
+              <label class="block mb-5">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">محتوى أعلى الـ PDF</span>
+                <textarea name="content" rows="5"
+                  class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-3 font-medium resize-y
+                         dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"><%= treepdf?.content || "" %></textarea>
+              </label>
+
+              <!-- PDF Upload (Admin Only) -->
+              <div class="mb-5">
+                <div class="flex items-center justify-between mb-2">
+                  <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">ملف PDF الحالي</p>
+                  <% if (treepdf?.pdf_url) { %>
+                    <div class="flex items-center gap-2">
+                      <a href="<%= treepdf.pdf_url %>" target="_blank"
+                         class="text-xs font-bold text-primary hover:underline dark:text-accent">
+                        فتح الملف
+                      </a>
+                      <button type="button" id="btnDeletePdf"
+                        class="text-xs font-bold px-2 py-1 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100
+                               dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15">
+                        حذف
+                      </button>
+                    </div>
+                  <% } else { %>
+                    <span class="text-xs text-slate-400 dark:text-slate-500">لا يوجد ملف مرفوع</span>
+                  <% } %>
+                </div>
+
+                <div id="pdfDropzone"
+                     class="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center cursor-pointer transition-all
+                            hover:bg-slate-100 hover:border-primary/50
+                            dark:border-border-dark dark:bg-background-dark/20 dark:hover:bg-accent/5 dark:hover:border-accent/50">
+                  <div class="flex flex-col items-center gap-3">
+                    <div class="size-14 rounded-full bg-white shadow-sm flex items-center justify-center
+                                dark:bg-surface-dark dark:border dark:border-border-dark">
+                      <span class="material-symbols-outlined text-primary dark:text-accent text-[30px]">cloud_upload</span>
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-slate-700 dark:text-slate-200">اسحب ملف PDF هنا أو اضغط للاختيار</p>
+                      <p class="text-[11px] font-bold text-slate-500 mt-1 uppercase dark:text-slate-500">PDF فقط • حد أقصى 25MB</p>
+                    </div>
+                    <p id="pdfSelectedName" class="text-xs text-slate-500 dark:text-slate-500 hidden"></p>
+                    <div class="flex items-center gap-2">
+                      <button type="button" id="btnUploadPdf"
+                        class="hidden flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                               bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                               dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95">
+                        <span class="material-symbols-outlined text-[20px]">upload</span>
+                        رفع الملف
+                      </button>
+                      <button type="button" id="btnClearPdf"
+                        class="hidden flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all
+                               bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                               dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:border-accent/50 dark:hover:text-accent">
+                        إلغاء
+                      </button>
+                    </div>
+
+                    <div id="pdfUploading" class="hidden w-full mt-2">
+                      <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-border-dark overflow-hidden">
+                        <div class="h-2 w-1/3 bg-primary dark:bg-accent animate-pulse"></div>
+                      </div>
+                      <p class="text-xs text-slate-500 dark:text-slate-500 mt-2 font-bold">جاري رفع الملف...</p>
+                    </div>
+
+                    <div id="pdfError" class="hidden text-xs font-bold text-red-600 dark:text-red-300 mt-2"></div>
+                  </div>
+
+                  <input id="pdfInput" type="file" accept="application/pdf,.pdf" class="hidden">
+                </div>
+              </div>
+
+              <div class="mt-auto flex items-center gap-3">
+                <button type="submit"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                         bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                         dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95">
+                  <span class="material-symbols-outlined text-[20px]">save</span>
+                  حفظ
+                </button>
+                <a href="/tree-pdf"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                         bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                         dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:border-accent/50 dark:hover:text-accent">
+                  <span class="material-symbols-outlined text-[20px]">visibility</span>
+                  عرض
+                </a>
+              </div>
+            </section>
+          </form>
+
+          <!-- SUPPORT FORM (UPDATED: tabs + contact & donation fields) -->
+          <form id="formSupport" method="post" action="/admin/pages/save" class="h-full">
+            <input type="hidden" name="slug" value="support"/>
+
+            <section class="rounded-2xl border p-6 sm:p-8 h-full
+                            bg-white border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]
+                            dark:bg-surface-dark dark:border-border-dark dark:gold-glow dark:p-8">
+              <div class="mb-6 flex flex-col gap-4 dark:mb-8">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 dark:gap-3">
+                      <span class="material-symbols-outlined text-primary dark:text-accent">volunteer_activism</span>
+                      صفحة الدعم والشكاوى
+                    </h3>
+                    <p class="text-slate-500 text-sm mt-1 dark:text-slate-500 dark:mt-1.5 dark:font-medium">
+                      تحديث محتوى صفحة الدعم + إدارة قنوات التواصل والدعم المادي.
+                    </p>
+                  </div>
+
+                  <button type="submit"
+                    class="text-primary hover:opacity-80 text-sm font-bold
+                           dark:text-accent dark:hover:text-primary-dark dark:text-xs dark:uppercase dark:tracking-widest dark:bg-accent/10 dark:px-3 dark:py-1.5 dark:rounded-lg dark:border dark:border-accent/20 dark:transition-all">
+                    حفظ
+                  </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex items-center gap-2 p-1 rounded-xl border border-slate-200 bg-slate-50
+                            dark:border-border-dark dark:bg-background-dark/30">
+                  <button type="button" data-tab="supportContent"
+                          class="supportTab flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all
+                                 bg-white text-primary shadow-sm border border-slate-200
+                                 dark:bg-surface-dark dark:text-accent dark:border-border-dark">
+                    محتوى الصفحة
+                  </button>
+                  <button type="button" data-tab="supportChannels"
+                          class="supportTab flex-1 px-4 py-2.5 rounded-lg text-sm font-bold transition-all
+                                 text-slate-600 hover:bg-white/70
+                                 dark:text-slate-300 dark:hover:bg-white/5">
+                    قنوات التواصل والدعم
+                  </button>
+                </div>
+              </div>
+
+              <!-- TAB: Content -->
+              <div id="supportContent" class="supportPane space-y-4">
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">العنوان</span>
+                  <input name="title" value="<%= support?.title || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">وصف مختصر</span>
+                  <input name="subtitle" value="<%= support?.subtitle || '' %>"
+                         class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                </label>
+
+                <label class="block">
+                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">نص إضافي (إرشادات/قنوات)</span>
+                  <textarea name="content" rows="8"
+                    class="mt-1 block w-full rounded-lg border-slate-200 bg-slate-50 focus:border-primary focus:bg-white focus:ring-0 text-slate-700 text-sm py-3 font-medium resize-y
+                           dark:rounded-xl dark:border-border-dark dark:bg-background-dark/40 dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"><%= support?.content || "" %></textarea>
+                </label>
+
+                <div class="pt-2 flex items-center gap-3">
+                  <button type="submit"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                           bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                           dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95">
+                    <span class="material-symbols-outlined text-[20px]">save</span>
+                    حفظ
+                  </button>
+                  <a href="/support"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                           bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                           dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:border-accent/50 dark:hover:text-accent">
+                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    عرض
+                  </a>
+                </div>
+              </div>
+
+              <!-- TAB: Channels & Donation -->
+              <div id="supportChannels" class="supportPane hidden space-y-6">
+                <!-- Donation box -->
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5
+                            dark:border-border-dark dark:bg-background-dark/30">
+                  <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                      <h4 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary dark:text-accent">payments</span>
+                        بيانات الدعم المادي
+                      </h4>
+                      <p class="text-xs text-slate-500 mt-1 dark:text-slate-500 font-medium">
+                        هذه البيانات ستظهر في صفحة الدعم للزوار (حسب تصميم صفحة الدعم عندك).
+                      </p>
+                    </div>
+                    <button type="button" id="clearDonation"
+                            class="text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100
+                                   dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15">
+                      مسح البيانات
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block">
+                      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">اسم الصندوق</span>
+                      <input name="fund_name" id="fund_name" value="<%= support?.fund_name || '' %>"
+                             placeholder="مثال: صندوق دعم العائلة"
+                             class="mt-1 block w-full rounded-lg border-slate-200 bg-white focus:border-primary focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                    dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">اسم البنك</span>
+                      <input name="bank_name" id="bank_name" value="<%= support?.bank_name || '' %>"
+                             placeholder="مثال: البنك الأهلي"
+                             class="mt-1 block w-full rounded-lg border-slate-200 bg-white focus:border-primary focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                    dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                    </label>
+
+                    <label class="block md:col-span-2">
+                      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">رقم الحساب / الآيبان</span>
+                      <input name="account_number" id="account_number" value="<%= support?.account_number || '' %>"
+                             placeholder="مثال: SA00 0000 0000 0000 0000 0000"
+                             class="mt-1 block w-full rounded-lg border-slate-200 bg-white focus:border-primary focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                    dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Contact box -->
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5
+                            dark:border-border-dark dark:bg-background-dark/30">
+                  <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                      <h4 class="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary dark:text-accent">contact_phone</span>
+                        قنوات التواصل
+                      </h4>
+                      <p class="text-xs text-slate-500 mt-1 dark:text-slate-500 font-medium">
+                        أضف واتساب وبريد للتواصل المباشر.
+                      </p>
+                    </div>
+                    <button type="button" id="clearContact"
+                            class="text-xs font-bold px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100
+                                   dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15">
+                      مسح البيانات
+                    </button>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block">
+                      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">رقم الواتساب</span>
+                      <input name="whatsapp" id="whatsapp" value="<%= support?.whatsapp || '' %>"
+                             placeholder="مثال: 9665xxxxxxxx"
+                             class="mt-1 block w-full rounded-lg border-slate-200 bg-white focus:border-primary focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                    dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                      <p class="text-[11px] mt-1 text-slate-500 dark:text-slate-500 font-bold">
+                        يفضل كتابة الرقم بدون مسافات. (مثال: 9665xxxxxxx)
+                      </p>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">البريد الإلكتروني</span>
+                      <input name="email" id="email" value="<%= support?.email || '' %>"
+                             placeholder="example@domain.com"
+                             class="mt-1 block w-full rounded-lg border-slate-200 bg-white focus:border-primary focus:ring-0 text-slate-700 text-sm py-2.5 font-medium
+                                    dark:bg-background-dark/40 dark:border-border-dark dark:text-slate-200 dark:focus:border-accent dark:focus:ring-1 dark:focus:ring-accent/30 dark:font-bold dark:px-4"/>
+                    </label>
+                  </div>
+
+                  <div class="pt-4 flex items-center gap-3">
+                    <button type="submit"
+                      class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                             bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                             dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95">
+                      <span class="material-symbols-outlined text-[20px]">save</span>
+                      حفظ
+                    </button>
+                    <button type="button" id="supportBackToContent"
+                      class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all
+                             bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                             dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:border-accent/50 dark:hover:text-accent">
+                      <span class="material-symbols-outlined text-[20px]">arrow_right_alt</span>
+                      العودة للمحتوى
+                    </button>
+                  </div>
+                </div>
+
+                <div class="text-xs text-slate-500 dark:text-slate-500 font-bold">
+                  ملاحظة: حفظ هذه الحقول يتطلب أن يدعم السيرفر تخزينها ضمن بيانات صفحة support.
+                </div>
+              </div>
+            </section>
+          </form>
+
+        </div>
+
+        <!-- SEO -->
+        <section class="rounded-2xl overflow-hidden border
+                        bg-white border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]
+                        dark:bg-surface-dark dark:border-border-dark dark:gold-glow">
+          <div class="p-4 sm:px-8 sm:py-6 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors
+                      dark:p-6 dark:sm:px-10 dark:sm:py-6 dark:hover:bg-white/5 dark:transition-all">
+            <div class="flex items-center gap-3 dark:gap-4">
+              <span class="material-symbols-outlined text-slate-400 dark:text-accent">search</span>
+              <div class="dark:block">
+                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200">إعدادات تحسين محركات البحث (SEO)</h3>
+                <p class="hidden dark:block text-[11px] text-slate-500 font-bold uppercase mt-0.5">الكلمات الدلالية • الوصف • العناوين</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-slate-400 dark:text-slate-500">expand_more</span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
 </div>
+
+<script>
+  // Theme toggle
+  (function () {
+    const btn = document.getElementById("themeBtn");
+    function setTheme(next) {
+      document.documentElement.setAttribute("data-theme", next);
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("theme", next);
+    }
+    btn?.addEventListener("click", () => {
+      const cur = document.documentElement.getAttribute("data-theme") || "dark";
+      setTheme(cur === "dark" ? "light" : "dark");
+    });
+    setTheme(localStorage.getItem("theme") || (document.documentElement.getAttribute("data-theme") || "dark"));
+  })();
+
+  // Save All
+  (function () {
+    const saveAll = document.getElementById("saveAll");
+    const forms = ["formAbout", "formTreePdf", "formSupport"].map(id => document.getElementById(id)).filter(Boolean);
+
+    saveAll?.addEventListener("click", async () => {
+      try {
+        for (let i = 0; i < forms.length; i++) {
+          const f = forms[i];
+          const fd = new FormData(f);
+          const res = await fetch(f.action, { method: "POST", body: fd, credentials: "same-origin" });
+          if (!res.ok) throw new Error("Save failed");
+        }
+        window.location.href = "/admin/pages?saved=1";
+      } catch (e) {
+        forms[0]?.submit();
+      }
+    });
+  })();
+
+  // ===== PDF Upload (Drag & Drop) =====
+  (function () {
+    const dz = document.getElementById("pdfDropzone");
+    const input = document.getElementById("pdfInput");
+    const btnUpload = document.getElementById("btnUploadPdf");
+    const btnClear = document.getElementById("btnClearPdf");
+    const selName = document.getElementById("pdfSelectedName");
+    const uploading = document.getElementById("pdfUploading");
+    const errBox = document.getElementById("pdfError");
+    const btnDelete = document.getElementById("btnDeletePdf");
+
+    let selectedFile = null;
+
+    function showError(msg){
+      errBox.textContent = msg;
+      errBox.classList.remove("hidden");
+    }
+    function clearError(){
+      errBox.textContent = "";
+      errBox.classList.add("hidden");
+    }
+    function setSelected(file){
+      selectedFile = file || null;
+      if (selectedFile) {
+        selName.textContent = "الملف المختار: " + selectedFile.name;
+        selName.classList.remove("hidden");
+        btnUpload.classList.remove("hidden");
+        btnClear.classList.remove("hidden");
+      } else {
+        selName.textContent = "";
+        selName.classList.add("hidden");
+        btnUpload.classList.add("hidden");
+        btnClear.classList.add("hidden");
+      }
+    }
+
+    function isPdf(file){
+      if (!file) return false;
+      const nameOk = /\.pdf$/i.test(file.name || "");
+      const typeOk = (file.type === "application/pdf");
+      return nameOk || typeOk;
+    }
+
+    dz?.addEventListener("click", () => input?.click());
+
+    input?.addEventListener("change", () => {
+      clearError();
+      const f = input.files && input.files[0];
+      if (!f) return;
+      if (!isPdf(f)) return showError("الرجاء اختيار ملف PDF فقط.");
+      setSelected(f);
+    });
+
+    dz?.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dz.classList.add("dzActive");
+    });
+    dz?.addEventListener("dragleave", () => dz.classList.remove("dzActive"));
+    dz?.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dz.classList.remove("dzActive");
+      clearError();
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!f) return;
+      if (!isPdf(f)) return showError("الرجاء إسقاط ملف PDF فقط.");
+      setSelected(f);
+    });
+
+    btnClear?.addEventListener("click", () => {
+      input.value = "";
+      setSelected(null);
+      clearError();
+    });
+
+    btnUpload?.addEventListener("click", async () => {
+      clearError();
+      if (!selectedFile) return showError("اختر ملفاً أولاً.");
+      if (selectedFile.size > 25 * 1024 * 1024) return showError("حجم الملف كبير جداً. الحد الأقصى 25MB.");
+
+      try {
+        uploading.classList.remove("hidden");
+        btnUpload.disabled = true;
+        btnClear.disabled = true;
+
+        const fd = new FormData();
+        fd.append("pdf_file", selectedFile);
+
+        const res = await fetch("/admin/pages/tree-pdf/upload", {
+          method: "POST",
+          body: fd,
+          credentials: "same-origin"
+        });
+
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error(t || "Upload failed");
+        }
+
+        window.location.href = "/admin/pages?saved=1";
+      } catch (e) {
+        showError("فشل رفع الملف: " + (e.message || "خطأ غير معروف"));
+      } finally {
+        uploading.classList.add("hidden");
+        btnUpload.disabled = false;
+        btnClear.disabled = false;
+      }
+    });
+
+    btnDelete?.addEventListener("click", async () => {
+      if (!confirm("هل أنت متأكد من حذف ملف الـ PDF الحالي؟")) return;
+      try {
+        const res = await fetch("/admin/pages/tree-pdf/delete", {
+          method: "POST",
+          credentials: "same-origin"
+        });
+        if (!res.ok) throw new Error(await res.text());
+        window.location.href = "/admin/pages?saved=1";
+      } catch (e) {
+        alert("فشل الحذف: " + (e.message || ""));
+      }
+    });
+  })();
+
+  // ===== Support tabs + clear fields =====
+  (function () {
+    const tabs = Array.from(document.querySelectorAll(".supportTab"));
+    const panes = {
+      supportContent: document.getElementById("supportContent"),
+      supportChannels: document.getElementById("supportChannels"),
+    };
+
+    function setActive(tabName){
+      Object.keys(panes).forEach(k => panes[k]?.classList.toggle("hidden", k !== tabName));
+      tabs.forEach(t => {
+        const active = t.getAttribute("data-tab") === tabName;
+        t.classList.toggle("bg-white", active);
+        t.classList.toggle("text-primary", active);
+        t.classList.toggle("shadow-sm", active);
+        t.classList.toggle("border", active);
+        t.classList.toggle("border-slate-200", active);
+
+        t.classList.toggle("dark:bg-surface-dark", active);
+        t.classList.toggle("dark:text-accent", active);
+        t.classList.toggle("dark:border-border-dark", active);
+
+        if (!active) {
+          t.classList.remove("bg-white","text-primary","shadow-sm","border","border-slate-200","dark:bg-surface-dark","dark:text-accent","dark:border-border-dark");
+        }
+      });
+    }
+
+    tabs.forEach(t => t.addEventListener("click", () => setActive(t.getAttribute("data-tab"))));
+    setActive("supportContent");
+
+    const clearDonation = document.getElementById("clearDonation");
+    const clearContact = document.getElementById("clearContact");
+
+    clearDonation?.addEventListener("click", () => {
+      if (!confirm("مسح بيانات الدعم المادي؟")) return;
+      ["fund_name","bank_name","account_number"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+    });
+
+    clearContact?.addEventListener("click", () => {
+      if (!confirm("مسح بيانات التواصل؟")) return;
+      ["whatsapp","email"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+    });
+
+    document.getElementById("supportBackToContent")?.addEventListener("click", () => setActive("supportContent"));
+  })();
+</script>
+
 </body>
 </html>
+

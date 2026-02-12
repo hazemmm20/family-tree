@@ -1,47 +1,293 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title><%= page?.title || "صفحة" %></title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title><%= page.title %> - نبذة العائلة</title>
+
+  <!-- OLD: keep -->
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css"/>
+
+  <!-- NEW: fonts (MATCH HOMEPAGE) + icons + tailwind -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#1f637a",
+            "accent": "#cfae61",
+            "background-light": "#f8f8f6",
+            "background-dark": "#0F1115",
+            "card-light": "#ffffff",
+            "card-dark": "#16191E",
+            "cream": "#FDFCF0",
+            "gold": "#cfae61",
+
+            "bg-charcoal": "#0F1115",
+            "bg-card": "#16191E",
+            "text-cream": "#FDFBF7",
+            "muted-slate": "#94A3B8",
+            "accent-gold-dark": "#D4AF37",
+          },
+          fontFamily: {
+            "display": ["Cairo", "sans-serif"],
+            "amiri": ["Amiri", "serif"]
+          },
+          backgroundImage: {
+            "islamic-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }
+        },
+      },
+    };
+  </script>
+
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    }
+  </style>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .ornamental-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem 0;
+    }
+    .ornamental-divider::before,
+    .ornamental-divider::after {
+      content: "";
+      height: 1px;
+      flex-grow: 1;
+      background: linear-gradient(to right, transparent, #cfae61, transparent);
+    }
+    .ornamental-icon { margin: 0 1rem; color: #cfae61; }
+
+    .timeline-connector::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, #cfae61 10%, #cfae61 90%, transparent);
+      box-shadow: 0 0 15px rgba(207, 174, 97, 0.3);
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+    @media (max-width: 768px) {
+      .timeline-connector::before { left: 1rem; transform: none; }
+    }
+  </style>
+
+  <!-- Theme sync before paint (instant) -->
+  <script>
+    (function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.documentElement.classList.toggle("dark", saved === "dark");
+
+      const obs = new MutationObserver(() => {
+        const t = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", t === "dark");
+      });
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    })();
+  </script>
 </head>
-<body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="brandLogo" src="/assets/logo.png" alt="شعار العائلة" />
-    <div class="brandText">
-      <div class="title"><%= page?.title || "" %></div>
-      <div class="subtitle"><%= page?.subtitle || "" %></div>
-    </div>
-  </div>
+<body class="bg-background-light dark:bg-bg-charcoal text-[#272522] dark:text-text-cream font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-gold selection:text-background-dark transition-colors duration-300">
 
-  <nav class="topnav">
-    <a class="navLink" href="/">الشجرة</a>
-    <a class="navLink active" href="/about">نبذة</a>
-    <a class="navLink" href="/honor">قائمة الشرف</a>
-    <a class="navLink" href="/tree-pdf">شجرة PDF</a>
-    <a class="navLink" href="/support">الدعم</a>
-  </nav>
+  <!-- Header (same system as homepage: no square icon, no menu button, login icon) -->
+  <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
 
-  <div class="actions">
-    <button id="themeToggle" class="adminBtn" type="button">الوضع: داكن</button>
-    <a class="adminBtn" href="/admin/login">لوحة الإدارة</a>
-  </div>
-</header>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
+            <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+            <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+          </div>
 
-<main class="page">
-  <div class="card">
-    <div class="cardHeader"><div style="font-weight:950">المحتوى</div></div>
-    <div class="cardBody">
-      <div style="line-height:1.9" class="muted">
-        <%= (page?.content || "لا يوجد محتوى بعد. يمكن تعديله من لوحة الإدارة > إدارة الصفحات.").replace(/\n/g, "<br>") %>
+          <div class="hidden sm:flex flex-col items-start">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">نبذة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">نبذة • تاريخ</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 md:gap-8">
+          <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
+            <a class="text-sm font-bold text-accent dark:text-gold decoration-2 underline-offset-8 underline" href="/about">نبذة</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
+          </nav>
+
+          <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
+            <button id="uiThemeBtn"
+              class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-gold/30 hover:bg-gray-50 dark:hover:bg-gold/10 transition-all"
+              type="button" title="تبديل المظهر">
+              <span class="material-symbols-outlined text-gray-600 dark:hidden">dark_mode</span>
+              <span class="material-symbols-outlined text-gold hidden dark:block">light_mode</span>
+            </button>
+
+            <a href="/admin/login"
+              class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
+                     dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10
+                     flex items-center justify-center"
+              title="تسجيل الدخول">
+              <span class="material-symbols-outlined text-[22px]">login</span>
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
-</main>
+  </header>
 
+  <main class="flex-grow">
+    <!-- Hero (uses old page data) -->
+    <section class="relative pt-20 pb-12 px-4 bg-background-light dark:bg-background-dark overflow-hidden">
+      <div class="absolute inset-0 bg-islamic-pattern opacity-100 dark:opacity-10 pointer-events-none"></div>
+      <div class="absolute top-0 left-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+      <div class="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
+
+      <div class="relative max-w-4xl mx-auto text-center z-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 border border-accent/20">
+          <span class="material-symbols-outlined text-sm">history_edu</span>
+          <span><%= page.title %></span>
+        </div>
+
+        <h1 class="text-5xl md:text-6xl font-black text-primary dark:text-white mb-6 tracking-tight leading-tight">
+          <%= page.title %>
+        </h1>
+
+        <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <%= page.subtitle %>
+        </p>
+
+        <div class="ornamental-divider max-w-xs mx-auto mt-8">
+          <span class="material-symbols-outlined ornamental-icon">stars</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content -->
+    <section class="relative py-12 px-4 md:px-8 max-w-6xl mx-auto">
+      <div class="relative timeline-connector">
+        <div class="relative flex items-center justify-between md:justify-normal mb-16 group">
+          <div class="absolute left-4 md:left-1/2 md:-translate-x-1/2 flex items-center justify-center z-10">
+            <div class="w-8 h-8 rounded-full bg-background-light dark:bg-background-dark border-2 border-accent flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div class="w-2.5 h-2.5 rounded-full bg-primary rotate-45"></div>
+            </div>
+          </div>
+
+          <div class="w-full md:w-10/12 md:mx-auto pl-12 md:pl-0">
+            <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 dark:border-gray-800 hover:border-accent/30 transition-all duration-300 relative overflow-hidden group-hover:-translate-y-1">
+              <div class="absolute top-0 right-0 w-full h-1 bg-gradient-to-l from-transparent via-accent to-transparent opacity-50"></div>
+
+              <div class="flex items-center justify-between mb-4">
+                <span class="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary dark:text-accent text-xs font-bold tracking-wider">نبذة</span>
+                <span class="text-sm text-gray-400 font-medium">محتوى الصفحة</span>
+              </div>
+
+              <div class="text-gray-700 dark:text-gray-300 leading-relaxed space-y-3">
+                <%- page.content %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-full pt-4 hidden md:block">
+          <div class="w-2 h-2 rounded-full bg-primary/30"></div>
+          <div class="w-2 h-16 bg-gradient-to-b from-primary/30 to-transparent mx-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Explore more -->
+    <section class="py-12 bg-white dark:bg-[#0A0C10] border-t border-gray-100 dark:border-white/5">
+      <div class="max-w-4xl mx-auto px-4 text-center">
+        <h4 class="text-lg font-bold text-primary dark:text-white mb-6">استكشف المزيد</h4>
+        <div class="flex flex-wrap justify-center gap-4">
+          <a class="group flex items-center gap-3 px-6 py-4 bg-background-light dark:bg-card-dark rounded-xl border border-transparent hover:border-accent/50 hover:shadow-md transition-all" href="/">
+            <span class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+              <span class="material-symbols-outlined">family_history</span>
+            </span>
+            <div class="text-right">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">الانتقال</p>
+              <p class="font-bold text-primary dark:text-white">عرض شجرة العائلة</p>
+            </div>
+          </a>
+
+          <a class="group flex items-center gap-3 px-6 py-4 bg-background-light dark:bg-card-dark rounded-xl border border-transparent hover:border-accent/50 hover:shadow-md transition-all" href="/honor">
+            <span class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+              <span class="material-symbols-outlined">military_tech</span>
+            </span>
+            <div class="text-right">
+              <p class="text-xs text-gray-500 uppercase tracking-wide">قسم</p>
+              <p class="font-bold text-primary dark:text-white">قائمة السير الذاتية</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
+      <div class="flex justify-center space-x-6 space-x-reverse md:order-2">
+        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Facebook">
+          <span class="sr-only">Facebook</span>
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"/></svg>
+        </a>
+        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Instagram">
+          <span class="sr-only">Instagram</span>
+          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.468 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" fill-rule="evenodd"/></svg>
+        </a>
+      </div>
+
+      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+          © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const btn = document.getElementById("uiThemeBtn");
+
+      function applyTheme(next) {
+        document.documentElement.setAttribute("data-theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+        localStorage.setItem("theme", next);
+      }
+
+      btn?.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "dark";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+
+      applyTheme(localStorage.getItem("theme") || "dark");
+    })();
+  </script>
 </body>
 </html>
+
