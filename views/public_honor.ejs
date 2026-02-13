@@ -77,6 +77,22 @@
       filter: sepia(0%) contrast(1.1);
       transform: scale(1.05);
     }
+
+    /* ===== Mobile Nav (Premium Capsule + Frosted Drawer) - Unified ===== */
+    #mobileNavOverlay.hidden { display: none; }
+    #mobileNavOverlay { display: block; }
+
+    #mobileNavDrawer{
+      transform: translateX(-110%);
+      transition: transform .26s cubic-bezier(.2,.9,.2,1);
+      will-change: transform;
+    }
+    #mobileNavDrawer.isOpen{ transform: translateX(0); }
+
+    #mobileNavBtn[data-open="true"] .ico-open { display: none; }
+    #mobileNavBtn[data-open="true"] .ico-close { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-open { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-close { display: none; }
   </style>
 
   <script>
@@ -96,24 +112,124 @@
 
 <body class="bg-background-light dark:bg-bg-charcoal text-[#272522] dark:text-text-cream font-display min-h-screen flex flex-col overflow-x-hidden selection:bg-gold selection:text-background-dark transition-colors duration-300">
 
-  <!-- Header (كما هو) -->
+  <!-- ✅ Mobile Nav Overlay + Drawer (Unified) -->
+  <div id="mobileNavOverlay" class="fixed inset-0 bg-black/40 z-[80] hidden" aria-hidden="true"></div>
+
+  <aside id="mobileNavDrawer"
+         class="fixed top-0 left-0 h-full w-[320px] max-w-[86vw]
+                bg-white/95 dark:bg-bg-card/95 backdrop-blur-xl
+                border-r border-gray-200 dark:border-white/10
+                shadow-2xl z-[90]">
+
+    <div class="h-1.5 w-full bg-gradient-to-r from-primary via-gold to-primary dark:from-accent-gold-dark dark:via-white/10 dark:to-accent-gold-dark"></div>
+
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/10">
+      <div class="flex items-center gap-3">
+        <img class="h-9 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+        <img class="h-9 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+      </div>
+      <button id="mobileNavClose"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              type="button"
+              aria-label="إغلاق القائمة">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="p-4 flex flex-col gap-2" aria-label="قائمة الجوال">
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">account_tree</span>
+          الشجرة
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/about">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">info</span>
+          نبذة
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/honor">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">library_books</span>
+          قائمة السير الذاتية
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/tree-pdf">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">picture_as_pdf</span>
+          شجرة PDF
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/support">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">support_agent</span>
+          الدعم
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <div class="mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
+        <a href="/admin/login"
+           class="w-full flex items-center justify-center gap-2
+                  bg-primary text-white px-4 py-3 rounded-2xl font-extrabold
+                  hover:bg-[#185366] transition-colors shadow-md shadow-primary/20
+                  dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10"
+           title="تسجيل الدخول">
+          <span class="material-symbols-outlined text-[22px]">login</span>
+          <span>تسجيل الدخول</span>
+        </a>
+      </div>
+
+      <div class="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-muted-slate font-amiri opacity-90">
+        © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+      </div>
+    </nav>
+  </aside>
+
+  <!-- ✅ Header (Unified + fixed button placement) -->
   <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20">
+      <div class="flex justify-between items-center h-20 gap-3">
 
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-3">
+        <!-- Logo + Title -->
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="flex items-center gap-3 shrink-0">
             <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
             <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
           </div>
 
-          <div class="hidden sm:flex flex-col items-start">
-            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">شجرة العائلة</h1>
-            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">قائمة السير الذاتية</span>
+          <div class="hidden sm:flex flex-col items-start min-w-0">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight truncate">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em] truncate">قائمة السير الذاتية</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-4 md:gap-8">
+        <!-- Actions -->
+        <div class="flex items-center gap-4 md:gap-8 shrink-0">
           <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/about">نبذة</a>
@@ -122,12 +238,30 @@
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
           </nav>
 
+          <!-- Mobile capsule button -->
+          <button id="mobileNavBtn"
+                  data-open="false"
+                  class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-full
+                         bg-white/90 dark:bg-bg-card/90 backdrop-blur
+                         border border-gray-200 dark:border-white/10
+                         shadow-sm dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]
+                         text-gray-800 dark:text-gold
+                         hover:bg-white dark:hover:bg-white/5 transition-colors"
+                  type="button"
+                  aria-label="فتح القائمة"
+                  aria-expanded="false">
+            <span class="material-symbols-outlined text-[20px] ico-open">apps</span>
+            <span class="material-symbols-outlined text-[20px] ico-close hidden">close</span>
+            <span class="text-[12px] font-extrabold tracking-wide">القائمة</span>
+          </button>
+
+          <!-- Theme + Login -->
           <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
             <button id="uiThemeBtn"
               class="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 dark:border-gold/30 hover:bg-gray-50 dark:hover:bg-gold/10 transition-all"
               type="button" title="تبديل المظهر">
               <span class="material-symbols-outlined text-gray-600 dark:hidden">dark_mode</span>
-              <span class="material-symbols-outlined text-gold hidden dark:block">light_mode</span>
+              <span class="material-symbols-outlined text-gold hidden dark:inline">light_mode</span>
             </button>
 
             <a href="/admin/login"
@@ -280,14 +414,12 @@
                   <div class="h-4"></div>
                 <% } %>
 
-                <!-- الإنجاز -->
                 <% if (x.achievement) { %>
                   <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2 line-clamp-2">
                     <%= (x.achievement || "").replace(/\n/g, " ") %>
                   </p>
                 <% } %>
 
-                <!-- ✅ النبذة (تحت الإنجاز كما طلبت) -->
                 <% if (x.bio) { %>
                   <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-6 line-clamp-2">
                     <%= (x.bio || "").replace(/\n/g, " ") %>
@@ -297,13 +429,11 @@
                 <% } %>
 
                 <div class="mt-auto pt-4 border-t border-gray-100 dark:border-white/10 w-full flex justify-between items-center">
-                  <!-- يمين: عرض التفاصيل -->
                   <button type="button"
                           class="text-xs text-gray-400 dark:text-gray-500 font-amiri tracking-wide hover:text-primary dark:hover:text-gold transition-colors js-open-details">
                     عرض التفاصيل
                   </button>
 
-                  <!-- يسار: اقرأ -->
                   <button type="button"
                           class="text-primary dark:text-gold hover:text-accent dark:hover:text-white font-extrabold text-sm flex items-center gap-1 group/btn js-open-details">
                     اقرأ <span class="material-symbols-outlined text-[16px] group-hover/btn:-translate-x-1 transition-transform rotate-180">arrow_forward</span>
@@ -328,7 +458,7 @@
       <% } %>
     </section>
 
-    <!-- ✅ Modal التفاصيل -->
+    <!-- Modal التفاصيل -->
     <div id="detailsModal" class="fixed inset-0 z-[100] hidden">
       <div id="detailsBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
@@ -388,19 +518,19 @@
 
   </main>
 
-  <!-- Footer (كما هو) -->
+  <!-- ✅ Footer موحّد (بدون سوشيال) -->
   <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
     <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
-      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
-        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+      <div class="w-full text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-500 dark:text-muted-slate font-amiri tracking-wide opacity-95">
           © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
         </p>
       </div>
     </div>
   </footer>
 
-  <!-- Theme toggle -->
   <script>
+    // Theme toggle
     (function () {
       const btn = document.getElementById("uiThemeBtn");
       function applyTheme(next) {
@@ -413,6 +543,42 @@
         applyTheme(current === "dark" ? "light" : "dark");
       });
       applyTheme(localStorage.getItem("theme") || "dark");
+    })();
+
+    // ✅ Mobile Nav open/close (Unified)
+    (function mobileNavInit(){
+      const btn = document.getElementById("mobileNavBtn");
+      const navDrawer = document.getElementById("mobileNavDrawer");
+      const overlay = document.getElementById("mobileNavOverlay");
+      const closeBtn = document.getElementById("mobileNavClose");
+
+      function setOpenState(isOpen){
+        btn?.setAttribute("data-open", isOpen ? "true" : "false");
+        btn?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      }
+
+      function openNav(){
+        overlay?.classList.remove("hidden");
+        navDrawer?.classList.add("isOpen");
+        setOpenState(true);
+      }
+      function closeNav(){
+        navDrawer?.classList.remove("isOpen");
+        overlay?.classList.add("hidden");
+        setOpenState(false);
+      }
+
+      btn?.addEventListener("click", () => {
+        const open = btn.getAttribute("data-open") === "true";
+        open ? closeNav() : openNav();
+      });
+
+      closeBtn?.addEventListener("click", closeNav);
+      overlay?.addEventListener("click", closeNav);
+      navDrawer?.querySelectorAll("a").forEach(a => a.addEventListener("click", closeNav));
+      window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNav(); });
+
+      setOpenState(false);
     })();
   </script>
 
@@ -469,7 +635,7 @@
     })();
   </script>
 
-  <!-- ✅ Details Modal Logic -->
+  <!-- Details Modal Logic -->
   <script>
     (function(){
       const modal = document.getElementById("detailsModal");
@@ -537,4 +703,3 @@
 
 </body>
 </html>
-

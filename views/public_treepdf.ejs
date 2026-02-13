@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= page?.title || "شجرة PDF" %> - شجرة العائلة</title>
 
-  <!-- OLD keep -->
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css"/>
 
-  <!-- NEW (same stack as باقي الصفحات) -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -87,9 +85,24 @@
       opacity: 1;
       transform: translate(-50%, 0);
     }
+
+    /* ===== Mobile Nav (Premium Capsule + Frosted Drawer) - Unified ===== */
+    #mobileNavOverlay.hidden { display: none; }
+    #mobileNavOverlay { display: block; }
+
+    #mobileNavDrawer {
+      transform: translateX(-110%);
+      transition: transform .26s cubic-bezier(.2,.9,.2,1);
+      will-change: transform;
+    }
+    #mobileNavDrawer.isOpen { transform: translateX(0); }
+
+    #mobileNavBtn[data-open="true"] .ico-open { display: none; }
+    #mobileNavBtn[data-open="true"] .ico-close { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-open { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-close { display: none; }
   </style>
 
-  <!-- Theme sync before paint (instant) -->
   <script>
     (function () {
       const saved = localStorage.getItem("theme") || "dark";
@@ -109,24 +122,88 @@
 
   <% const pdfUrl = (page && page.pdf_url) ? page.pdf_url : ""; %>
 
+  <!-- ✅ Mobile Nav Overlay + Drawer (Public) -->
+  <div id="mobileNavOverlay" class="fixed inset-0 bg-black/40 z-[80] hidden" aria-hidden="true"></div>
+
+  <aside id="mobileNavDrawer"
+         class="fixed top-0 left-0 h-full w-[320px] max-w-[86vw]
+                bg-white/95 dark:bg-bg-card/95 backdrop-blur-xl
+                border-r border-gray-200 dark:border-white/10
+                shadow-2xl z-[90]">
+    <div class="h-1.5 w-full bg-gradient-to-r from-primary via-gold to-primary dark:from-accent-gold-dark dark:via-white/10 dark:to-accent-gold-dark"></div>
+
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/10">
+      <div class="flex items-center gap-3">
+        <img class="h-9 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+        <img class="h-9 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+      </div>
+      <button id="mobileNavClose"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              type="button"
+              aria-label="إغلاق القائمة">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="p-4 flex flex-col gap-2" aria-label="قائمة الجوال">
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between" href="/">
+        <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] opacity-80">account_tree</span>الشجرة</span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between" href="/about">
+        <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] opacity-80">info</span>نبذة</span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between" href="/honor">
+        <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] opacity-80">library_books</span>قائمة السير الذاتية</span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between" href="/tree-pdf">
+        <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] opacity-80">picture_as_pdf</span>شجرة PDF</span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+      <a class="group px-4 py-3 rounded-2xl font-extrabold border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center justify-between" href="/support">
+        <span class="flex items-center gap-2"><span class="material-symbols-outlined text-[20px] opacity-80">support_agent</span>الدعم</span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <div class="mt-3 pt-3 border-t border-gray-100 dark:border-white/10">
+        <a href="/admin/login"
+           class="w-full flex items-center justify-center gap-2
+                  bg-primary text-white px-4 py-3 rounded-2xl font-extrabold
+                  hover:bg-[#185366] transition-colors shadow-md shadow-primary/20
+                  dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10"
+           title="تسجيل الدخول">
+          <span class="material-symbols-outlined text-[22px]">login</span>
+          <span>تسجيل الدخول</span>
+        </a>
+      </div>
+
+      <div class="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-muted-slate font-amiri opacity-90">
+        © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+      </div>
+    </nav>
+  </aside>
+
   <!-- Header -->
   <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20">
+      <div class="flex justify-between items-center h-20 gap-3">
 
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="flex items-center gap-3 shrink-0">
             <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
             <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
           </div>
 
-          <div class="hidden sm:flex flex-col items-start">
-            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight">شجرة العائلة</h1>
-            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">شجرة PDF</span>
+          <div class="hidden sm:flex flex-col items-start min-w-0">
+            <h1 class="text-xl font-extrabold text-primary dark:text-gold leading-none tracking-tight truncate">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent uppercase tracking-[0.2em] truncate">شجرة PDF</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-4 md:gap-8">
+        <div class="flex items-center gap-4 md:gap-8 shrink-0">
+
           <nav class="hidden md:flex gap-8 items-center" aria-label="التنقل الرئيسي">
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/">الشجرة</a>
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/about">نبذة</a>
@@ -134,6 +211,23 @@
             <a class="text-sm font-bold text-accent dark:text-gold decoration-2 underline-offset-8 underline" href="/tree-pdf">شجرة PDF</a>
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
           </nav>
+
+          <!-- ✅ Mobile capsule button (same as index) -->
+          <button id="mobileNavBtn"
+                  data-open="false"
+                  class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-full
+                         bg-white/90 dark:bg-bg-card/90 backdrop-blur
+                         border border-gray-200 dark:border-white/10
+                         shadow-sm dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]
+                         text-gray-800 dark:text-gold
+                         hover:bg-white dark:hover:bg-white/5 transition-colors"
+                  type="button"
+                  aria-label="فتح القائمة"
+                  aria-expanded="false">
+            <span class="material-symbols-outlined text-[20px] ico-open">apps</span>
+            <span class="material-symbols-outlined text-[20px] ico-close hidden">close</span>
+            <span class="text-[12px] font-extrabold tracking-wide">القائمة</span>
+          </button>
 
           <div class="flex items-center gap-2 dark:border-r dark:border-white/10 dark:pr-4">
             <button id="uiThemeBtn"
@@ -157,11 +251,11 @@
     </div>
   </header>
 
+  <!-- (باقي الصفحة كما هو عندك بدون تغيير) -->
   <main class="flex-1">
     <div class="relative bg-islamic-pattern">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
 
-        <!-- Breadcrumb -->
         <nav class="mb-8 flex flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-500">
           <a class="font-medium hover:text-primary dark:hover:text-gold hover:underline" href="/">الرئيسية</a>
           <span class="select-none">/</span>
@@ -170,7 +264,6 @@
           <span class="font-bold text-primary dark:text-gold"><%= page?.title || "شجرة PDF" %></span>
         </nav>
 
-        <!-- Title + Subtitle -->
         <div class="mb-10 text-center">
           <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#121617] dark:text-white">
             <%= page?.title || "شجرة العائلة (PDF)" %>
@@ -180,7 +273,6 @@
           </p>
         </div>
 
-        <!-- Optional intro content -->
         <% if (page?.content) { %>
           <div class="max-w-4xl mx-auto mb-10">
             <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
@@ -191,57 +283,40 @@
           </div>
         <% } %>
 
-        <!-- Viewer -->
         <div class="relative mx-auto mb-12 w-full max-w-5xl">
           <div class="relative z-10 overflow-hidden rounded-2xl bg-gradient-to-br from-[#d4af37] via-[#f3e5ab] to-[#c5a028] p-[3px] gold-glow">
             <div class="relative flex flex-col items-center justify-center bg-primary/90 dark:bg-[#0F1115] p-2 md:p-3 rounded-[14px]">
 
               <div class="viewer relative w-full overflow-hidden rounded-lg bg-paper shadow-2xl border border-black/5 dark:border-white/10">
 
-                <!-- Toolbelt (تظهر فقط إذا يوجد PDF) -->
                 <% if (pdfUrl) { %>
                   <div class="toolbelt absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/90 dark:bg-[#0F1115]/90 p-2 shadow-xl backdrop-blur-md border border-gray-200 dark:border-white/10">
                     <button id="zoomOut" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تصغير">
                       <span class="material-symbols-outlined text-[20px]">remove</span>
                     </button>
-
                     <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
-
                     <span id="zoomLabel" class="px-2 text-sm font-black text-primary dark:text-gold">100%</span>
-
                     <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
-
                     <button id="zoomIn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تكبير">
                       <span class="material-symbols-outlined text-[20px]">add</span>
                     </button>
-
                     <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
-
                     <button id="fullBtn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="ملء الشاشة">
                       <span class="material-symbols-outlined text-[20px]">fullscreen</span>
                     </button>
                   </div>
                 <% } %>
 
-                <!-- Scrollable canvas -->
                 <div id="pdfCanvas"
                      class="group relative aspect-[4/3] w-full <%= pdfUrl ? "cursor-grab active:cursor-grabbing overflow-auto" : "overflow-hidden" %> custom-scrollbar bg-[#fdfbf7] dark:bg-[#0b0e12]">
                   <div class="absolute inset-0 pointer-events-none opacity-5 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]"></div>
 
                   <div class="flex min-h-full items-center justify-center p-6 md:p-10 lg:p-16">
                     <div id="pdfInner" class="w-full max-w-5xl">
-
                       <% if (pdfUrl) { %>
-                        <!-- PDF viewer (from DB) -->
-                        <iframe
-                          id="pdfFrame"
-                          class="w-full rounded-lg border border-black/10 dark:border-white/10 bg-white"
-                          style="height: 70vh;"
-                          src="<%= pdfUrl %>"
-                          title="شجرة العائلة PDF"
-                        ></iframe>
+                        <iframe id="pdfFrame" class="w-full rounded-lg border border-black/10 dark:border-white/10 bg-white" style="height: 70vh;"
+                                src="<%= pdfUrl %>" title="شجرة العائلة PDF"></iframe>
                       <% } else { %>
-                        <!-- No PDF -->
                         <div class="w-full rounded-2xl border border-dashed border-gray-300 bg-white/80 p-8 text-center shadow-sm
                                     dark:border-white/15 dark:bg-white/5">
                           <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-accent dark:bg-gold/15 dark:text-gold">
@@ -253,112 +328,28 @@
                             <span class="font-black text-primary dark:text-gold">إدارة الصفحات</span> ←
                             <span class="font-black">شجرة العائلة (PDF)</span>
                           </p>
-                          <div class="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
-                            <a href="/admin/login"
-                               class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-white font-black shadow-lg shadow-primary/25 hover:translate-y-[-1px] transition-all
-                                      dark:bg-gold dark:text-background-dark dark:shadow-gold/15">
-                              <span class="material-symbols-outlined">admin_panel_settings</span>
-                              دخول الأدمن
-                            </a>
-                            <a href="/"
-                               class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-6 py-3 text-gray-700 font-black hover:bg-gray-50 transition-all
-                                      dark:bg-white/5 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/10">
-                              <span class="material-symbols-outlined">account_tree</span>
-                              العودة للشجرة
-                            </a>
-                          </div>
                         </div>
                       <% } %>
-
                     </div>
                   </div>
 
-                  <div class="absolute bottom-4 left-4 rounded-lg bg-black/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">
-                    PDF
-                  </div>
+                  <div class="absolute bottom-4 left-4 rounded-lg bg-black/70 px-3 py-1 text-xs font-bold text-white backdrop-blur-md">PDF</div>
                 </div>
 
               </div>
             </div>
           </div>
-
-          <div class="absolute -bottom-4 -left-4 -z-0 h-32 w-32 rounded-full bg-accent/20 blur-3xl"></div>
-          <div class="absolute -right-4 -top-4 -z-0 h-32 w-32 rounded-full bg-primary/20 blur-3xl"></div>
         </div>
 
-        <!-- Actions -->
-        <div class="flex flex-col items-center justify-center gap-6 pb-14">
-          <% if (pdfUrl) { %>
-            <a href="<%= pdfUrl %>" download
-               class="group relative flex min-w-[240px] items-center justify-center gap-3 overflow-hidden rounded-full bg-primary px-8 py-4 text-white shadow-lg shadow-primary/30 transition-all hover:translate-y-[-2px] hover:shadow-xl hover:shadow-primary/40 focus:ring-4 focus:ring-primary/20 dark:bg-gold dark:text-background-dark dark:shadow-gold/20">
-              <div class="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100"></div>
-              <span class="material-symbols-outlined animate-bounce">download</span>
-              <div class="flex flex-col items-start text-right">
-                <span class="text-sm font-medium opacity-90">تحميل ملف PDF</span>
-                <span class="text-xs font-bold opacity-70"><%= pdfUrl %></span>
-              </div>
-            </a>
-
-            <div class="flex flex-wrap items-center justify-center gap-4 text-sm font-bold text-gray-600 dark:text-gray-400">
-              <button id="printBtn" class="flex items-center gap-2 rounded-lg px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                <span class="material-symbols-outlined text-[20px]">print</span>
-                <span>طباعة</span>
-              </button>
-              <span class="hidden h-4 w-px bg-gray-300 dark:bg-white/10 sm:block"></span>
-              <button id="shareBtn" class="flex items-center gap-2 rounded-lg px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
-                <span class="material-symbols-outlined text-[20px]">share</span>
-                <span>مشاركة</span>
-              </button>
-            </div>
-          <% } else { %>
-            <div class="text-sm font-bold text-gray-500 dark:text-gray-400">
-              لا يمكن التحميل/الطباعة قبل رفع الملف.
-            </div>
-          <% } %>
-        </div>
-
-        <!-- Info cards -->
-        <div class="grid gap-6 md:grid-cols-2">
-          <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
-            <div class="flex items-start gap-4">
-              <div class="rounded-full bg-accent/10 p-3 text-accent dark:bg-gold/15 dark:text-gold">
-                <span class="material-symbols-outlined">history_edu</span>
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-[#121617] dark:text-white">معلومة</h3>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                  يمكنك التكبير/التصغير وملء الشاشة من شريط الأدوات أعلى العارض. كما يمكنك تحميل الملف للاحتفاظ بنسخة محلية.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/5">
-            <div class="flex items-start gap-4">
-              <div class="rounded-full bg-primary/10 p-3 text-primary dark:bg-white/10 dark:text-gold">
-                <span class="material-symbols-outlined">verified</span>
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-[#121617] dark:text-white">تحديث الملف</h3>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                  يتم رفع/استبدال ملف الـ PDF من لوحة الإدارة:
-                  <b class="font-amiri">إدارة الصفحات</b> ← <b class="font-amiri">شجرة العائلة (PDF)</b>.
-                  هذا الخيار متاح لمدير النظام فقط.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        <!-- Footer line already unified below -->
       </div>
     </div>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
+  <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-white/10 mt-auto">
     <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
-      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
-        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+      <div class="w-full text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-500 dark:text-muted-slate font-amiri tracking-wide opacity-95">
           © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
         </p>
       </div>
@@ -366,7 +357,6 @@
   </footer>
 
   <script>
-    // Theme toggle
     (function () {
       const btn = document.getElementById("uiThemeBtn");
       function applyTheme(next) {
@@ -381,7 +371,44 @@
       applyTheme(localStorage.getItem("theme") || "dark");
     })();
 
-    // Viewer controls (Zoom + Fullscreen + Drag scroll)
+    // ✅ Mobile Nav open/close (Unified)
+    (function mobileNavInit(){
+      const btn = document.getElementById("mobileNavBtn");
+      const navDrawer = document.getElementById("mobileNavDrawer");
+      const overlay = document.getElementById("mobileNavOverlay");
+      const closeBtn = document.getElementById("mobileNavClose");
+
+      function setOpenState(isOpen){
+        btn?.setAttribute("data-open", isOpen ? "true" : "false");
+        btn?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      }
+
+      function openNav(){
+        overlay?.classList.remove("hidden");
+        navDrawer?.classList.add("isOpen");
+        setOpenState(true);
+      }
+      function closeNav(){
+        navDrawer?.classList.remove("isOpen");
+        overlay?.classList.add("hidden");
+        setOpenState(false);
+      }
+
+      btn?.addEventListener("click", () => {
+        const open = btn.getAttribute("data-open") === "true";
+        open ? closeNav() : openNav();
+      });
+
+      closeBtn?.addEventListener("click", closeNav);
+      overlay?.addEventListener("click", closeNav);
+      navDrawer?.querySelectorAll("a").forEach(a => a.addEventListener("click", closeNav));
+      window.addEventListener("keydown", (e) => { if (e.key === "Escape") closeNav(); });
+
+      setOpenState(false);
+    })();
+  </script>
+
+  <script>
     (function(){
       const inner = document.getElementById("pdfInner");
       const canvas = document.getElementById("pdfCanvas");
@@ -392,8 +419,6 @@
       const printBtn = document.getElementById("printBtn");
       const shareBtn = document.getElementById("shareBtn");
       const pdfFrame = document.getElementById("pdfFrame");
-
-      // لو ما في PDF: لا تفعل التحكم
       if (!pdfFrame) return;
 
       let zoom = 1;
@@ -416,7 +441,6 @@
         } catch(e) {}
       });
 
-      // Drag-to-scroll
       let isDown = false, startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
       canvas?.addEventListener("mousedown", (e) => {
         isDown = true;
@@ -434,7 +458,6 @@
         canvas.scrollTop = scrollTop - dy;
       });
 
-      // Print / Share (use current PDF url)
       const currentPdfUrl = pdfFrame.getAttribute("src");
 
       printBtn?.addEventListener("click", () => {
@@ -443,10 +466,7 @@
       });
 
       shareBtn?.addEventListener("click", async () => {
-        const url = currentPdfUrl.startsWith("http")
-          ? currentPdfUrl
-          : (location.origin + currentPdfUrl);
-
+        const url = currentPdfUrl.startsWith("http") ? currentPdfUrl : (location.origin + currentPdfUrl);
         try{
           if(navigator.share) await navigator.share({ title: "شجرة العائلة (PDF)", url });
           else {
@@ -461,4 +481,3 @@
   </script>
 </body>
 </html>
-

@@ -6,10 +6,10 @@
 
   <title>شجرة العائلة</title>
 
-  <!-- OLD: Theme must load early -->
+  <!-- Theme must load early -->
   <script src="/theme.js"></script>
 
-  <!-- NEW: Fonts + Material Symbols + Tailwind -->
+  <!-- Fonts + Material Symbols + Tailwind -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -114,6 +114,7 @@
       border-radius: 2px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
+    html.dark .node-label-text { color: #FDFBF7; } /* مهم جدًا للأسماء بالداكن */
     html.dark .leaf { fill: #D4AF37; opacity: 0.6; filter: none; }
     html.dark .glowing-branch {
       stroke: #D4AF37;
@@ -121,12 +122,29 @@
       filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
     }
     .square-frame { border-radius: 4px !important; }
+
+    /* ===== Mobile Nav (Premium Capsule + Frosted Drawer) ===== */
+    #mobileNavOverlay.hidden { display: none; }
+    #mobileNavOverlay { display: block; }
+
+    #mobileNavDrawer {
+      transform: translateX(-110%);
+      transition: transform .26s cubic-bezier(.2,.9,.2,1);
+      will-change: transform;
+    }
+    #mobileNavDrawer.isOpen { transform: translateX(0); }
+
+    /* زر كبسولة: تغير الأيقونة عند الفتح */
+    #mobileNavBtn[data-open="true"] .ico-open { display: none; }
+    #mobileNavBtn[data-open="true"] .ico-close { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-open { display: inline; }
+    #mobileNavBtn[data-open="false"] .ico-close { display: none; }
   </style>
 
-  <!-- OLD: Keep old stylesheet path -->
+  <!-- Keep old stylesheet path -->
   <link rel="stylesheet" href="/styles.css" />
 
-  <!-- OLD: d3 -->
+  <!-- d3 -->
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 
   <!-- Sync theme before paint -->
@@ -147,42 +165,164 @@
 
 <body class="bg-background-light dark:bg-bg-charcoal text-text-dark dark:text-text-cream font-display min-h-screen flex flex-col relative overflow-x-hidden selection:bg-accent-gold selection:text-white dark:selection:text-bg-charcoal">
 
+  <!-- Mobile Nav Overlay + Drawer (Left) -->
+  <div id="mobileNavOverlay" class="fixed inset-0 bg-black/40 z-[80] hidden" aria-hidden="true"></div>
+
+  <aside id="mobileNavDrawer"
+         class="fixed top-0 left-0 h-full w-[320px] max-w-[86vw]
+                bg-white/95 dark:bg-bg-card/95 backdrop-blur-xl
+                border-r border-gray-200 dark:border-accent-gold/20
+                shadow-2xl z-[90]">
+
+    <!-- شريط علوي زخرفي بسيط -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-primary via-accent-gold to-primary dark:from-accent-gold-dark dark:via-white/10 dark:to-accent-gold-dark"></div>
+
+    <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-accent-gold/10">
+      <div class="flex items-center gap-3">
+        <img class="h-9 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
+        <img class="h-9 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
+      </div>
+      <button id="mobileNavClose"
+              class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              type="button"
+              aria-label="إغلاق القائمة">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="p-4 flex flex-col gap-2" aria-label="قائمة الجوال">
+      <!-- روابط -->
+      <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                border border-gray-200/80 dark:border-accent-gold/20
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">account_tree</span>
+          الشجرة
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                border border-gray-200/80 dark:border-accent-gold/20
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/about">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">info</span>
+          نبذة
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                border border-gray-200/80 dark:border-accent-gold/20
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/honor">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">library_books</span>
+          قائمة السير الذاتية
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                border border-gray-200/80 dark:border-accent-gold/20
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/tree-pdf">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">picture_as_pdf</span>
+          شجرة PDF
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                border border-gray-200/80 dark:border-accent-gold/20
+                hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
+                flex items-center justify-between"
+         href="/support">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[20px] opacity-80">support_agent</span>
+          الدعم
+        </span>
+        <span class="material-symbols-outlined text-[18px] opacity-40 group-hover:opacity-80">chevron_left</span>
+      </a>
+
+      <div class="mt-3 pt-3 border-t border-gray-100 dark:border-accent-gold/10">
+        <a href="/admin/login"
+           class="w-full flex items-center justify-center gap-2
+                  bg-primary dark:bg-accent-gold-dark text-white dark:text-bg-charcoal
+                  px-4 py-3 rounded-2xl dark:square-frame font-extrabold
+                  hover:bg-[#185366] dark:hover:bg-white transition-colors
+                  shadow-md shadow-primary/20 dark:shadow-accent-gold/10"
+           title="تسجيل الدخول">
+          <span class="material-symbols-outlined text-[22px]">login</span>
+          <span>تسجيل الدخول</span>
+        </a>
+      </div>
+
+      <div class="mt-3 text-[11px] leading-relaxed text-text-muted dark:text-muted-slate font-amiri opacity-90">
+        © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
+      </div>
+    </nav>
+  </aside>
+
   <!-- HEADER -->
   <header class="bg-white dark:bg-bg-charcoal/95 dark:backdrop-blur-md border-b border-gray-100 dark:border-accent-gold/20 sticky top-0 z-50 shadow-sm/50 dark:shadow-2xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-20">
+      <!-- هنا أصلحنا مشكلة تداخل زر الموبايل: بدون absolute -->
+      <div class="flex justify-between items-center h-20 gap-3">
 
-        <!-- (3) removed square icon badge completely -->
-        <div class="flex items-center gap-4">
-          <!-- OLD: Preserve logo paths -->
-          <div class="flex items-center gap-3">
+        <!-- Logo + Title -->
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="flex items-center gap-3 shrink-0">
             <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
             <img class="h-10 w-auto block dark:hidden" src="/assets/logo-light.svg" alt="شعار العائلة" />
           </div>
 
-          <div class="hidden sm:flex flex-col items-start">
-            <h1 class="text-xl font-extrabold text-primary dark:text-accent-gold-dark leading-none tracking-tight">شجرة العائلة</h1>
-            <span class="text-[10px] font-bold text-accent-gold dark:text-accent-gold/70 uppercase tracking-[0.2em]">اضغط على أي شخص لتفعيل وضع التركيز</span>
+          <div class="hidden sm:flex flex-col items-start min-w-0">
+            <h1 class="text-xl font-extrabold text-primary dark:text-accent-gold-dark leading-none tracking-tight truncate">شجرة العائلة</h1>
+            <span class="text-[10px] font-bold text-accent-gold dark:text-accent-gold/70 uppercase tracking-[0.2em] truncate">
+              اضغط على أي شخص لتفعيل وضع التركيز
+            </span>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4 lg:gap-8">
-          <!-- OLD: Preserve nav paths -->
+        <!-- Actions -->
+        <div class="flex items-center gap-2 md:gap-4 lg:gap-8 shrink-0">
+
+          <!-- Desktop nav -->
           <nav class="hidden md:flex gap-6 lg:gap-8" aria-label="التنقل الرئيسي">
-            <a class="text-sm font-semibold text-text-dark dark:text-text-cream hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
-               href="/">الشجرة</a>
-            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
-               href="/about">نبذة</a>
-            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
-               href="/honor">قائمة السير الذاتية</a>
-            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
-               href="/tree-pdf">شجرة PDF</a>
-            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1"
-               href="/support">الدعم</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-text-cream hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/">الشجرة</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/about">نبذة</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/honor">قائمة السير الذاتية</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/tree-pdf">شجرة PDF</a>
+            <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/support">الدعم</a>
           </nav>
 
+          <!-- Mobile capsule button (no overlap) -->
+          <button id="mobileNavBtn"
+                  data-open="false"
+                  class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-full
+                         bg-white/90 dark:bg-bg-card/90 backdrop-blur
+                         border border-gray-200 dark:border-accent-gold/30
+                         shadow-sm dark:shadow-[0_10px_30px_rgba(0,0,0,0.45)]
+                         text-text-dark dark:text-accent-gold-dark
+                         hover:bg-white dark:hover:bg-white/5 transition-colors"
+                  type="button"
+                  aria-label="فتح القائمة"
+                  aria-expanded="false">
+            <span class="material-symbols-outlined text-[20px] ico-open">apps</span>
+            <span class="material-symbols-outlined text-[20px] ico-close hidden">close</span>
+            <span class="text-[12px] font-extrabold tracking-wide">القائمة</span>
+          </button>
+
+          <!-- Theme + Login -->
           <div class="flex items-center gap-2 dark:border-r dark:border-accent-gold/20 dark:pr-4 md:dark:pr-8">
-            <!-- (1) Theme toggle now instant (no refresh) -->
             <button id="uiThemeBtn"
                     class="p-2.5 rounded-full text-text-dark dark:text-accent-gold-dark hover:bg-gray-100 dark:hover:bg-accent-gold/10 transition-colors flex items-center justify-center border border-transparent hover:border-gray-200 dark:border-accent-gold/30 dark:hover:border-accent-gold/50"
                     type="button"
@@ -191,7 +331,6 @@
               <span class="material-symbols-outlined text-[20px] hidden dark:inline">light_mode</span>
             </button>
 
-            <!-- (2) Replace admin text with login icon (same path) -->
             <a href="/admin/login"
                class="p-2.5 rounded-full bg-primary text-white hover:bg-[#185366] transition-all shadow-md shadow-primary/20 active:scale-[0.98]
                       dark:bg-accent-gold-dark dark:text-bg-charcoal dark:hover:bg-white dark:shadow-accent-gold/10
@@ -200,13 +339,11 @@
               <span class="material-symbols-outlined text-[22px]">login</span>
             </a>
 
-            <!-- (4) Removed menu / side dots button entirely -->
-
-            <!-- OLD: Hidden themeToggle for app.js (kept for compatibility) -->
+            <!-- Hidden themeToggle for app.js (compatibility) -->
             <button id="themeToggle" type="button" class="hidden" aria-pressed="true">الوضع: داكن</button>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
   </header>
@@ -278,29 +415,18 @@
 
   </main>
 
-  <!-- FOOTER -->
+  <!-- FOOTER (بدون فيسبوك/إنستجرام) -->
   <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
     <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
-      <div class="flex justify-center space-x-6 space-x-reverse md:order-2">
-        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Facebook">
-          <span class="sr-only">Facebook</span>
-          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"/></svg>
-        </a>
-        <a class="text-gray-400 dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors" href="#" aria-label="Instagram">
-          <span class="sr-only">Instagram</span>
-          <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path clip-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.468 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" fill-rule="evenodd"/></svg>
-        </a>
-      </div>
-
-      <div class="mt-8 md:mt-0 md:order-1 text-center md:text-end dark:text-right">
-        <p class="text-xs text-gray-400 dark:text-muted-slate font-amiri tracking-wide">
+      <div class="w-full text-center md:text-end dark:text-right">
+        <p class="text-xs text-gray-500 dark:text-muted-slate font-amiri tracking-wide opacity-95">
           © ٢٠٢٦ وقف عائلة خاشقجي. جميع الحقوق محفوظة. حفظ الأنساب والاحتفاء بالتراث.
         </p>
       </div>
     </div>
   </footer>
 
-  <!-- OLD: Drawer + Modal IDs preserved for app.js -->
+  <!-- Drawer + Modal IDs preserved for app.js -->
   <aside id="drawer"
          class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white dark:bg-bg-card border-l border-gray-200 dark:border-accent-gold/20 shadow-2xl z-[60] translate-x-full transition-transform duration-300"
          aria-label="تفاصيل الشخص">
@@ -342,7 +468,7 @@
   </style>
 
   <script>
-    // (1) Instant theme toggle without refresh (no dependency on app.js click handlers)
+    // Instant theme toggle (no refresh)
     (function instantThemeToggle() {
       const btn = document.getElementById("uiThemeBtn");
       const hiddenBtn = document.getElementById("themeToggle");
@@ -360,23 +486,61 @@
         applyTheme(next);
       });
 
-      // Ensure correct on load
       const saved = localStorage.getItem("theme") || "dark";
       applyTheme(saved);
     })();
 
-    // Keep backdrop close (app.js closes on #modal click; we also close on backdrop)
+    // Backdrop close
     (function modalBackdropClickFix() {
       const modal = document.getElementById("modal");
       const backdrop = document.getElementById("modalBackdrop");
       backdrop?.addEventListener("click", () => modal?.classList.add("hidden"));
     })();
+
+    // Mobile Nav open/close
+    (function mobileNavInit(){
+      const btn = document.getElementById("mobileNavBtn");
+      const navDrawer = document.getElementById("mobileNavDrawer");
+      const overlay = document.getElementById("mobileNavOverlay");
+      const closeBtn = document.getElementById("mobileNavClose");
+
+      function setOpenState(isOpen){
+        btn?.setAttribute("data-open", isOpen ? "true" : "false");
+        btn?.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      }
+
+      function openNav(){
+        overlay?.classList.remove("hidden");
+        navDrawer?.classList.add("isOpen");
+        setOpenState(true);
+      }
+      function closeNav(){
+        navDrawer?.classList.remove("isOpen");
+        overlay?.classList.add("hidden");
+        setOpenState(false);
+      }
+
+      btn?.addEventListener("click", () => {
+        const open = btn.getAttribute("data-open") === "true";
+        open ? closeNav() : openNav();
+      });
+
+      closeBtn?.addEventListener("click", closeNav);
+      overlay?.addEventListener("click", closeNav);
+
+      navDrawer?.querySelectorAll("a").forEach(a => a.addEventListener("click", closeNav));
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeNav();
+      });
+
+      // ensure initial state
+      setOpenState(false);
+    })();
   </script>
 
-  <!-- OLD: app.js path preserved -->
+  <!-- app.js -->
   <script src="/app.js"></script>
 
 </body>
 </html>
-
-
