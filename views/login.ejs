@@ -1,3 +1,4 @@
+<!-- views/login.ejs -->
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,41 +9,35 @@
   <!-- Theme must load early -->
   <script src="/theme.js"></script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..900&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-  <!-- Tailwind config: combines BOTH palettes exactly like your light+dark codes -->
+  <!-- ✅ نفس “شكل” الوضع الفاتح لكن بألوان داكنة عند الداكن -->
   <script>
     tailwind.config = {
       darkMode: "class",
       theme: {
         extend: {
           colors: {
-            /* LIGHT (exact) */
-            "primary": "#1f637a",
-            "primary-dark": "#164858",
-            "background-light": "#f6f7f8",
-            "background-dark": "#131c1f",
-            "accent-gold": "#E3C56F",
-            "surface-light": "#FAFAFA",
-            "surface-dark": "#1a262a",
-
-            /* DARK (exact) */
-            "primary-gold": "#C5A059",
-            "primary-hover": "#D4B16A",
-            "deep-black": "#0F1115",
-            "card-dark": "#1A1C20",
-            "cream": "#F5F5DC",
-            "input-bg": "#121418",
+            primary: "#1f637a",
+            accent: "#E3C56F",
+            "bg-light": "#FBF9F6",
+            "bg-dark": "#0F1115",
+            "card-light": "#FFFFFF",
+            "card-dark": "#1A1D21",
+            "border-dark": "#2D3139",
+            "muted": "#64748B",
+            "muted-dark": "#94A3B8",
           },
-          fontFamily: { "display": ["Cairo", "sans-serif"] },
-          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+          fontFamily: { display: ["Cairo", "sans-serif"], amiri: ["Amiri", "serif"] },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
           backgroundImage: {
-            /* Light pattern (exact teal) */
-            "islamic-pattern-light": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231f637a' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-            /* Dark pattern (exact gold) */
-            "islamic-pattern-dark": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C5A059' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+            // +++ pattern (matches screenshot vibe)
+            "plus-pattern-light": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none'%3E%3Cpath d='M22 14v16M14 22h16' stroke='%231f637a' stroke-opacity='.10' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E\")",
+            "plus-pattern-dark": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44'%3E%3Cg fill='none'%3E%3Cpath d='M22 14v16M14 22h16' stroke='%23E3C56F' stroke-opacity='.10' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E\")",
           }
         }
       }
@@ -51,291 +46,239 @@
 
   <style type="text/tailwindcss">
     @layer base {
+      .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
       body { @apply transition-colors duration-300; }
-    }
-    .form-input-transition { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    @keyframes shimmer { 100% { transform: translateX(-100%); } }
-
-    /* Gold logo filter (same as your dark code idea) */
-    .logo-gold-filter {
-      filter: sepia(1) saturate(3) hue-rotate(5deg) brightness(1.1);
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      html.dark ::-webkit-scrollbar-thumb { background: #2D3139; }
+      html.dark ::-webkit-scrollbar-thumb:hover { background: #E3C56F; }
     }
   </style>
 
-  <!-- Theme sync before paint (same system as your site) -->
+  <!-- ✅ Sync theme: data-theme <-> class dark -->
   <script>
     (function () {
-      const saved = localStorage.getItem("theme") || "dark";
-      document.documentElement.setAttribute("data-theme", saved);
-      document.documentElement.classList.toggle("dark", saved === "dark");
+      const t = document.documentElement.getAttribute("data-theme") || localStorage.getItem("theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+      document.documentElement.classList.toggle("dark", t === "dark");
 
       const obs = new MutationObserver(() => {
-        const t = document.documentElement.getAttribute("data-theme") || "dark";
-        document.documentElement.classList.toggle("dark", t === "dark");
+        const next = document.documentElement.getAttribute("data-theme") || "dark";
+        document.documentElement.classList.toggle("dark", next === "dark");
       });
       obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
     })();
   </script>
 </head>
 
-<body class="font-display min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden
-             bg-[#f8f8f6] dark:bg-deep-black text-[#121617] dark:text-cream selection:bg-accent-gold/30">
+<body class="font-display min-h-screen overflow-hidden
+             bg-bg-light text-[#121617]
+             dark:bg-bg-dark dark:text-slate-100 selection:bg-accent/30">
 
-  <!-- DARK top header (exists in your dark code) -->
-  <header class="hidden dark:flex fixed top-0 left-0 w-full h-16 px-6 items-center justify-between z-50 bg-[#0F1115]/80 backdrop-blur-lg border-b border-white/5">
-    <div class="flex items-center gap-4">
-      <div class="w-8 h-8 rounded-full bg-accent-gold/10 border border-accent-gold/20 flex items-center justify-center">
-        <span class="material-symbols-outlined text-accent-gold text-lg">admin_panel_settings</span>
-      </div>
-      <span class="text-xs font-bold text-accent-gold tracking-widest uppercase hidden sm:block">بوابة الإدارة</span>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button id="uiThemeBtnDark"
-        class="w-10 h-10 flex items-center justify-center rounded-xl bg-accent-gold/10 border border-accent-gold/20 text-accent-gold hover:bg-accent-gold hover:text-deep-black transition-all duration-300"
-        type="button" title="تبديل المظهر">
-        <span class="material-symbols-outlined text-[20px] fill-current">light_mode</span>
-      </button>
-
-      <button class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/10" type="button">
-        <div class="text-right hidden sm:block">
-          <p class="text-[10px] text-cream/40 leading-none">مرحباً بك</p>
-          <p class="text-xs font-bold text-cream">زائر النظام</p>
-        </div>
-        <div class="w-9 h-9 rounded-xl bg-input-bg border border-white/10 flex items-center justify-center">
-          <span class="material-symbols-outlined text-cream/40">person</span>
-        </div>
-      </button>
-    </div>
-  </header>
-
-  <!-- LIGHT floating toggle (exists in your white code) -->
-  <div class="fixed top-6 left-6 z-50 dark:hidden">
-    <button id="uiThemeBtnLight"
-      aria-label="تبديل المظهر"
-      class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-[#dde2e4] shadow-sm hover:shadow-md text-[#121617] transition-all duration-300 focus:outline-none"
-      type="button">
-      <span class="material-symbols-outlined">dark_mode</span>
-    </button>
+  <!-- ✅ الخلفية (نفس الشكل في الفاتح والداكن) -->
+  <div aria-hidden="true" class="fixed inset-0 -z-10 bg-plus-pattern-light dark:bg-plus-pattern-dark opacity-100"></div>
+  <div aria-hidden="true" class="fixed inset-0 -z-10 pointer-events-none">
+    <div class="absolute top-[-12%] right-[-10%] w-[520px] h-[520px] rounded-full blur-[110px] bg-accent/12 dark:bg-accent/10"></div>
+    <div class="absolute bottom-[-12%] left-[-10%] w-[520px] h-[520px] rounded-full blur-[110px] bg-primary/10 dark:bg-primary/10"></div>
   </div>
 
-  <!-- Background pattern switches by theme (exact) -->
-  <div aria-hidden="true" class="absolute inset-0 z-0 pointer-events-none bg-islamic-pattern-light dark:bg-islamic-pattern-dark"></div>
+  <!-- ✅ أزرار أعلى اليسار: (الثيم + زر القائمة) في الفاتح والداكن بنفس المكان/الشكل -->
+  <div class="fixed top-5 left-5 z-50 flex items-center gap-3">
+    <!-- Theme -->
+    <button id="uiThemeBtn"
+      class="w-12 h-12 flex items-center justify-center rounded-full
+             bg-white/95 border border-slate-200 shadow-sm hover:shadow-md transition-all
+             text-slate-800
+             dark:bg-card-dark/90 dark:border-border-dark dark:text-accent dark:hover:bg-white/5 dark:hover:border-accent/40"
+      type="button" aria-label="تبديل المظهر" title="تبديل المظهر">
+      <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+      <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+    </button>
 
-  <!-- Light blobs (exact) -->
-  <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-accent-gold/10 rounded-full blur-[100px] pointer-events-none dark:hidden"></div>
-  <div class="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none dark:hidden"></div>
+    <!-- ✅ Menu -->
+    <div class="relative">
+      <button id="menuBtn"
+        class="w-12 h-12 flex items-center justify-center rounded-full
+               bg-white/95 border border-slate-200 shadow-sm hover:shadow-md transition-all
+               text-slate-800
+               dark:bg-card-dark/90 dark:border-border-dark dark:text-accent dark:hover:bg-white/5 dark:hover:border-accent/40"
+        type="button" aria-label="القائمة" title="القائمة">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
 
-  <!-- Dark blobs (exact) -->
-  <div class="hidden dark:block absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[120px] pointer-events-none"></div>
-  <div class="hidden dark:block absolute bottom-[-10%] left-[-5%] w-[600px] h-[600px] bg-accent-gold/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <!-- Dropdown -->
+      <div id="menuPanel"
+        class="hidden absolute left-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden
+               dark:border-border-dark dark:bg-card-dark">
+        <a href="/" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50
+                          dark:text-slate-200 dark:hover:bg-white/5">
+          <span class="material-symbols-outlined text-[20px]">account_tree</span>
+          عرض الشجرة
+        </a>
+        <a href="/about" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50
+                               dark:text-slate-200 dark:hover:bg-white/5">
+          <span class="material-symbols-outlined text-[20px]">history_edu</span>
+          النبذة
+        </a>
+        <a href="/honor" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50
+                               dark:text-slate-200 dark:hover:bg-white/5">
+          <span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+          قائمة السير الذاتية
+        </a>
+        <div class="h-px bg-slate-100 dark:bg-white/10"></div>
+        <a href="/support" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50
+                                 dark:text-slate-200 dark:hover:bg-white/5">
+          <span class="material-symbols-outlined text-[20px]">volunteer_activism</span>
+          الدعم
+        </a>
+      </div>
+    </div>
+  </div>
 
-  <main class="relative z-10 w-full max-w-[440px] flex flex-col dark:pt-16">
+  <!-- ✅ (تم حذف زر "مرحباً بك أيها الزائر" من الوضع الداكن نهائيًا) -->
 
-    <!-- CARD: Light matches your white code / Dark matches your dark code -->
-    <div class="bg-surface-light dark:bg-card-dark rounded-xl dark:rounded-2xl
-                shadow-[0_20px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.8)]
-                border border-white/50 dark:border-white/5 backdrop-blur-sm dark:backdrop-blur-md overflow-hidden flex flex-col">
+  <main class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div class="w-full max-w-[520px]">
 
-      <!-- top accent line -->
-      <div class="h-1.5 dark:h-1 w-full bg-gradient-to-l from-primary via-accent-gold to-primary dark:from-transparent dark:via-accent-gold dark:to-transparent dark:opacity-60"></div>
+      <!-- Card (نفس تخطيط الفاتح في الداكن) -->
+      <div class="rounded-2xl border border-slate-200 bg-white shadow-[0_20px_45px_-12px_rgba(0,0,0,0.10)]
+                  dark:border-border-dark dark:bg-card-dark dark:shadow-[0_35px_70px_-20px_rgba(0,0,0,0.65)]
+                  overflow-hidden">
 
-      <div class="px-8 pt-10 dark:pt-12 pb-4 flex flex-col items-center text-center">
+        <!-- top line -->
+        <div class="h-1 w-full bg-primary/90 dark:bg-accent/70"></div>
 
-        <!-- Logo block -->
-        <div class="w-20 h-20 dark:w-28 dark:h-28 mb-6 relative group cursor-default">
-          <div class="absolute inset-0 bg-accent-gold/20 dark:bg-accent-gold/30 rounded-full blur-md dark:blur-xl opacity-0 dark:opacity-10 group-hover:opacity-100 dark:group-hover:opacity-20 transition-opacity duration-500 dark:duration-700"></div>
-
-          <div class="relative w-full h-full bg-white dark:bg-input-bg rounded-full shadow-sm dark:shadow-2xl
-                      border border-gray-100 dark:border-accent-gold/20 flex items-center justify-center overflow-hidden p-3 dark:p-5">
-
-            <!-- ✅ حل شعار الداكن: استخدم ملف dark إن كان موجود، وإلا نطبّق فلتر ذهبي -->
-            <img src="/assets/logo-light.svg"
-                 alt="شعار العائلة"
-                 class="w-full h-full object-contain opacity-90 dark:hidden"/>
-
-            <img src="/assets/logo-dark.svg"
-                 onerror="this.onerror=null; this.src='/assets/logo-light.svg'; this.classList.add('logo-gold-filter');"
-                 alt="شعار العائلة"
-                 class="w-full h-full object-contain opacity-90 hidden dark:block logo-gold-filter"/>
+        <div class="px-7 sm:px-10 pt-10 pb-8 text-center">
+          <!-- Logo -->
+          <div class="mx-auto w-20 h-20 rounded-full border border-slate-200 bg-white flex items-center justify-center mb-6
+                      dark:border-border-dark dark:bg-bg-dark/40">
+            <img src="/assets/logo-light.svg" alt="شعار العائلة" class="w-12 h-12 object-contain dark:hidden"/>
+            <img src="/assets/logo-dark.svg" alt="شعار العائلة" class="w-12 h-12 object-contain hidden dark:block"/>
           </div>
+
+          <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-accent tracking-tight">
+            تسجيل دخول المشرف
+          </h1>
+          <p class="mt-3 text-sm font-bold text-slate-500 dark:text-slate-400">
+            دخول آمن للنظام
+          </p>
         </div>
 
-        <h1 class="text-2xl sm:text-[28px] dark:text-3xl font-bold tracking-tight
-                   text-[#121617] dark:text-accent-gold leading-tight dark:mb-2">
-          تسجيل دخول المشرف
-        </h1>
+        <div class="px-7 sm:px-10 pb-10">
 
-        <p class="text-sm font-medium mt-2 text-[#677c83] dark:text-cream/50">
-          <span class="dark:hidden">دخول آمن للنظام</span>
-          <span class="hidden dark:inline">بوابة الإدارة المركزية لعائلة خاشقجي</span>
-        </p>
-      </div>
-
-      <div class="px-8 dark:px-10 pb-8 dark:pb-10 pt-2 dark:pt-6">
-
-        <% if (error) { %>
-          <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm font-bold
-                      dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200">
-            <%= error %>
-          </div>
-        <% } %>
-
-        <form class="flex flex-col gap-5" method="post" action="/admin/login">
-
-          <!-- Username -->
-          <div class="space-y-2">
-            <label for="username"
-              class="text-sm dark:text-xs font-semibold dark:font-bold mr-1
-                     text-[#121617] dark:text-accent-gold/70 dark:uppercase dark:tracking-wider">
-              <span class="dark:hidden">اسم المستخدم أو البريد الإلكتروني</span>
-              <span class="hidden dark:inline">اسم المستخدم</span>
-            </label>
-
-            <div class="relative group">
-              <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                <span class="material-symbols-outlined
-                             text-[#677c83] group-focus-within:text-primary
-                             dark:text-cream/30 dark:group-focus-within:text-accent-gold
-                             transition-colors duration-200 dark:text-xl">
-                  <span class="dark:hidden">person</span>
-                  <span class="hidden dark:inline">account_circle</span>
-                </span>
-              </div>
-
-              <input id="username" name="username" required
-                class="form-input-transition block w-full h-12
-                       pr-11 dark:pr-12 pl-4
-                       rounded-lg dark:rounded-xl
-                       border border-[#dde2e4] dark:border-white/10
-                       bg-white dark:bg-input-bg
-                       text-[#121617] dark:text-cream
-                       placeholder:text-[#677c83]/70 dark:placeholder:text-cream/20
-                       focus:outline-none
-                       focus:ring-2 focus:ring-primary/20 dark:focus:ring-1 dark:focus:ring-accent-gold/40
-                       focus:border-primary dark:focus:border-accent-gold/50
-                       text-base"
-                placeholder="أدخل اسم المستخدم"
-                type="text"/>
+          <% if (error) { %>
+            <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm font-bold
+                        dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+              <%= error %>
             </div>
-          </div>
+          <% } %>
 
-          <!-- Password -->
-          <div class="space-y-2">
-            <label for="password"
-              class="text-sm dark:text-xs font-semibold dark:font-bold mr-1
-                     text-[#121617] dark:text-accent-gold/70 dark:uppercase dark:tracking-wider">
-              كلمة المرور
-            </label>
+          <form class="flex flex-col gap-5" method="post" action="/admin/login">
 
-            <div class="relative group">
-              <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                <span class="material-symbols-outlined
-                             text-[#677c83] group-focus-within:text-primary
-                             dark:text-cream/30 dark:group-focus-within:text-accent-gold
-                             transition-colors duration-200 dark:text-xl">
-                  <span class="dark:hidden">lock</span>
-                  <span class="hidden dark:inline">key</span>
-                </span>
+            <!-- Username -->
+            <div class="space-y-2 text-right">
+              <label for="username" class="text-sm font-extrabold text-slate-700 dark:text-slate-200">
+                اسم المستخدم أو البريد الإلكتروني
+              </label>
+
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
+                  <span class="material-symbols-outlined text-[20px]">person</span>
+                </div>
+
+                <input id="username" name="username" required type="text"
+                  placeholder="أدخل اسم المستخدم"
+                  class="block w-full h-12 rounded-xl border border-slate-200 bg-white
+                         px-4 pr-4 pl-11 text-sm font-bold text-slate-900
+                         placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary
+                         dark:border-border-dark dark:bg-bg-dark/35 dark:text-slate-100 dark:placeholder:text-slate-500
+                         dark:focus:ring-2 dark:focus:ring-accent/20 dark:focus:border-accent"/>
               </div>
-
-              <input id="password" name="password" type="password" required
-                class="form-input-transition block w-full h-12
-                       pr-11 dark:pr-12 pl-11 dark:pl-12
-                       rounded-lg dark:rounded-xl
-                       border border-[#dde2e4] dark:border-white/10
-                       bg-white dark:bg-input-bg
-                       text-[#121617] dark:text-cream
-                       placeholder:text-[#677c83]/70 dark:placeholder:text-cream/20
-                       focus:outline-none
-                       focus:ring-2 focus:ring-primary/20 dark:focus:ring-1 dark:focus:ring-accent-gold/40
-                       focus:border-primary dark:focus:border-accent-gold/50
-                       text-base"
-                placeholder="••••••••"/>
-
-              <button id="togglePass" type="button"
-                class="absolute inset-y-0 left-0 pl-3 dark:pl-4 flex items-center justify-center
-                       text-[#677c83] hover:text-[#121617]
-                       dark:text-cream/30 dark:hover:text-accent-gold
-                       transition-colors cursor-pointer focus:outline-none"
-                aria-label="إظهار/إخفاء كلمة المرور">
-                <span id="toggleIcon" class="material-symbols-outlined text-[20px]">visibility</span>
-              </button>
             </div>
 
-            <div class="pt-1">
-              <div class="flex justify-end dark:hidden">
-                <a class="text-xs sm:text-sm font-medium text-[#677c83] hover:text-primary transition-colors hover:underline decoration-1 underline-offset-2" href="#">
+            <!-- Password -->
+            <div class="space-y-2 text-right">
+              <label for="password" class="text-sm font-extrabold text-slate-700 dark:text-slate-200">
+                كلمة المرور
+              </label>
+
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
+                  <span class="material-symbols-outlined text-[20px]">lock</span>
+                </div>
+
+                <input id="password" name="password" required type="password"
+                  placeholder="••••••••"
+                  class="block w-full h-12 rounded-xl border border-slate-200 bg-white
+                         px-4 pr-11 pl-11 text-sm font-bold text-slate-900
+                         placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary
+                         dark:border-border-dark dark:bg-bg-dark/35 dark:text-slate-100 dark:placeholder:text-slate-500
+                         dark:focus:ring-2 dark:focus:ring-accent/20 dark:focus:border-accent"/>
+
+                <!-- show/hide -->
+                <button id="togglePass" type="button"
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center justify-center
+                         text-slate-400 hover:text-slate-900
+                         dark:text-slate-500 dark:hover:text-accent transition-colors"
+                  aria-label="إظهار/إخفاء كلمة المرور" title="إظهار/إخفاء">
+                  <span id="toggleIcon" class="material-symbols-outlined text-[20px]">visibility</span>
+                </button>
+              </div>
+
+              <div class="pt-1 flex justify-start">
+                <a class="text-xs font-bold text-slate-500 hover:text-primary hover:underline underline-offset-4
+                          dark:text-slate-400 dark:hover:text-accent"
+                   href="#">
                   نسيت كلمة المرور؟
                 </a>
               </div>
-
-              <div class="hidden dark:flex justify-start">
-                <a class="text-xs font-medium text-cream/40 hover:text-accent-gold transition-colors hover:underline underline-offset-4" href="#">
-                  هل نسيت كلمة المرور؟
-                </a>
-              </div>
             </div>
-          </div>
 
-          <!-- Submit -->
-          <button type="submit"
-            class="group relative w-full mt-2 dark:mt-4 h-12
-                   bg-primary hover:bg-primary-dark dark:bg-accent-gold dark:hover:bg-primary-hover
-                   text-white dark:text-deep-black
-                   font-bold rounded-lg dark:rounded-xl
-                   shadow-md hover:shadow-lg dark:shadow-lg dark:shadow-accent-gold/10 dark:hover:shadow-accent-gold/20
-                   transition-all duration-200 dark:duration-300 overflow-hidden
-                   focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-accent-gold/50
-                   focus:ring-offset-2 dark:focus:ring-offset-[#1a262a]">
-            <!-- shimmer only in light (exact) -->
-            <div class="dark:hidden absolute inset-0 w-full h-full bg-gradient-to-l from-transparent via-white/10 to-transparent translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            <!-- Submit -->
+            <button type="submit"
+              class="w-full h-12 rounded-xl font-black text-sm
+                     bg-primary text-white hover:bg-primary/90 shadow-md hover:shadow-lg transition-all active:scale-[0.99]
+                     dark:bg-accent dark:text-black dark:hover:bg-[#D9B85F] dark:shadow-accent/10">
+              <span class="inline-flex items-center justify-center gap-2">
+                تسجيل الدخول
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+              </span>
+            </button>
 
-            <span class="relative flex items-center justify-center gap-2 dark:gap-3">
-              <span class="dark:hidden">تسجيل الدخول</span>
-              <span class="hidden dark:inline">دخول النظام</span>
-              <span class="material-symbols-outlined text-[20px] dark:text-[18px] transition-transform duration-300 group-hover:-translate-x-1">arrow_back</span>
-            </span>
-          </button>
+            <!-- Back -->
+            <a href="/"
+               class="w-full h-12 rounded-xl border border-slate-200 bg-white text-slate-900 font-black text-sm
+                      flex items-center justify-center hover:bg-slate-50 transition-colors
+                      dark:border-border-dark dark:bg-bg-dark/35 dark:text-slate-200 dark:hover:bg-white/5">
+              رجوع
+            </a>
 
-          <!-- Optional back link (kept from your original system) -->
-          <a class="w-full h-12 rounded-lg border border-[#dde2e4] bg-white text-[#121617] font-bold flex items-center justify-center hover:bg-gray-50 transition-colors mt-2 dark:hidden"
-             href="/">
-            رجوع
-          </a>
+          </form>
+        </div>
 
-        </form>
+        <!-- Footer strip -->
+        <div class="border-t border-slate-100 bg-slate-50 px-6 py-4 text-center
+                    dark:border-white/10 dark:bg-black/20">
+          <p class="text-xs font-bold text-slate-500 dark:text-slate-500 inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">shield</span>
+            منطقة دخول مقيد
+          </p>
+        </div>
       </div>
 
-      <!-- Footer strip (light exact / dark exact) -->
-      <div class="bg-[#f8f9fa] border-t border-[#edf0f2] p-4 text-center dark:hidden">
-        <p class="text-xs text-[#677c83] font-medium flex items-center justify-center gap-1.5 uppercase tracking-wide">
-          <span class="material-symbols-outlined text-[16px]">shield</span>
-          منطقة دخول مقيد
-        </p>
-      </div>
-
-      <div class="hidden dark:block bg-black/40 border-t border-white/5 p-4 text-center">
-        <p class="text-[9px] text-accent-gold/40 font-bold flex items-center justify-center gap-2 uppercase tracking-[0.25em]">
-          <span class="material-symbols-outlined text-[12px]">verified_user</span>
-          نظام تشفير آمن ومعتمد
-        </p>
-      </div>
-    </div>
-
-    <!-- bottom copyright -->
-    <div class="mt-8 text-center">
-      <p class="text-xs text-[#677c83]/60 dark:text-cream/20 font-medium tracking-wide">
+      <p class="mt-8 text-center text-xs font-bold text-slate-400 dark:text-slate-600">
         © ٢٠٢٦ شجرة عائلة خاشقجي • جميع الحقوق محفوظة
       </p>
+
     </div>
   </main>
 
   <script>
-    // Unified theme toggle (same as your site)
+    // ✅ Theme toggle (unified)
     (function () {
-      const btnLight = document.getElementById("uiThemeBtnLight");
-      const btnDark  = document.getElementById("uiThemeBtnDark");
+      const btn = document.getElementById("uiThemeBtn");
 
       function applyTheme(next) {
         document.documentElement.setAttribute("data-theme", next);
@@ -343,18 +286,15 @@
         localStorage.setItem("theme", next);
       }
 
-      function toggleTheme() {
+      btn?.addEventListener("click", () => {
         const current = document.documentElement.getAttribute("data-theme") || "dark";
         applyTheme(current === "dark" ? "light" : "dark");
-      }
-
-      btnLight?.addEventListener("click", toggleTheme);
-      btnDark?.addEventListener("click", toggleTheme);
+      });
 
       applyTheme(localStorage.getItem("theme") || "dark");
     })();
 
-    // Password visibility
+    // ✅ Password visibility
     (function () {
       const btn = document.getElementById("togglePass");
       const input = document.getElementById("password");
@@ -367,7 +307,31 @@
         if (icon) icon.textContent = (next === "password") ? "visibility" : "visibility_off";
       });
     })();
+
+    // ✅ Menu dropdown (hamburger)
+    (function () {
+      const btn = document.getElementById("menuBtn");
+      const panel = document.getElementById("menuPanel");
+
+      function close() { panel?.classList.add("hidden"); }
+      function toggle() { panel?.classList.toggle("hidden"); }
+
+      btn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggle();
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!panel || panel.classList.contains("hidden")) return;
+        const inside = e.target.closest("#menuPanel");
+        const onBtn = e.target.closest("#menuBtn");
+        if (!inside && !onBtn) close();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+      });
+    })();
   </script>
 </body>
 </html>
-

@@ -1,3 +1,4 @@
+<!-- views/pages_admin.ejs -->
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -11,9 +12,8 @@
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 
-  <!-- ✅ (توحيد) أضفنا Amiri مثل القالب الموحد -->
+  <!-- ✅ (توحيد) Cairo + Amiri -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..800&family=Amiri:wght@400;700&display=swap" rel="stylesheet"/>
-
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
@@ -35,7 +35,6 @@
             "border-dark": "#2D3139",
             "primary-dark": "#C5A854",
           },
-          /* ✅ (توحيد) إضافة amiri */
           fontFamily: { "display": ["Cairo", "sans-serif"], "amiri": ["Amiri", "serif"] },
           borderRadius: {
             "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"
@@ -111,9 +110,142 @@
 <body class="font-display antialiased overflow-hidden selection:bg-primary/20 selection:text-primary
              bg-background-light text-slate-800
              dark:bg-background-dark dark:text-slate-300">
+
 <div class="flex h-screen w-full">
 
-  <!-- SIDEBAR -->
+  <!-- ✅ MOBILE SIDEBAR (NEW) -->
+  <div id="mobileOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40 hidden lg:hidden"></div>
+
+  <aside id="mobileSidebar"
+         class="fixed inset-y-0 right-0 w-[19rem] max-w-[90vw] z-50 lg:hidden
+                bg-white border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.08)] border-l
+                dark:bg-surface-dark dark:border-border-dark dark:shadow-[4px_0_24px_rgba(0,0,0,0.45)]
+                transform translate-x-full transition-transform duration-300">
+    <div class="absolute inset-0 sidebar-pattern pointer-events-none"></div>
+
+    <div class="relative z-10 flex items-center justify-between px-6 border-b h-20 border-slate-50 dark:border-border-dark/50">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-10 rounded-lg bg-primary text-white
+                    dark:bg-gradient-to-br dark:from-accent dark:to-primary-dark dark:text-black dark:shadow-lg">
+          <span class="material-symbols-outlined">account_tree</span>
+        </div>
+        <div>
+          <p class="font-black text-sm text-primary dark:text-white">عائلة خاشقجي</p>
+          <p class="text-[11px] font-bold text-slate-400 dark:text-accent/70">لوحة الإدارة</p>
+        </div>
+      </div>
+
+      <button id="closeMobileSidebar" type="button"
+              class="size-10 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50
+                     dark:bg-surface-dark dark:border-border-dark dark:text-slate-300 dark:hover:bg-white/5 active:scale-95">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="relative z-10 flex-1 overflow-y-auto px-3 py-5 space-y-7">
+
+      <div class="flex flex-col gap-1">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
+          <span class="dark:hidden">الإدارة</span>
+          <span class="hidden dark:inline">النظام</span>
+        </p>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/admin">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">group</span>
+          <span class="font-medium text-sm">إدارة الأفراد</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative overflow-hidden group
+                  bg-primary/5 text-primary ring-1 ring-primary/10 shadow-sm
+                  dark:bg-accent/10 dark:text-accent dark:ring-1 dark:ring-accent/20"
+           href="/admin/pages">
+          <div class="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-e-full bg-accent"></div>
+          <span class="material-symbols-outlined">history_edu</span>
+          <span class="font-bold text-sm">إدارة الصفحات</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/admin/honor">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">workspace_premium</span>
+          <span class="font-medium text-sm">إدارة السير الذاتية</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/admin/support-messages">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">mail</span>
+          <span class="font-medium text-sm">رسائل الدعم</span>
+        </a>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
+          روابط الموقع
+        </p>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">account_tree</span>
+          <span class="font-medium text-sm">عرض الشجرة</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/tree-pdf">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">description</span>
+          <span class="font-medium text-sm">عرض PDF</span>
+        </a>
+
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group
+                  text-slate-600 hover:bg-slate-50
+                  dark:text-slate-400 dark:hover:bg-accent/5 dark:hover:text-accent"
+           href="/support">
+          <span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors
+                       dark:text-slate-500 dark:group-hover:text-accent">support_agent</span>
+          <span class="font-medium text-sm">عرض الدعم</span>
+        </a>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <p class="px-4 text-xs font-bold text-slate-400 mb-2">النظام</p>
+        <form method="post" action="/admin/logout" class="m-0">
+          <button type="submit"
+            class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors group text-start">
+            <span class="material-symbols-outlined text-slate-400 group-hover:text-red-500 transition-colors">logout</span>
+            <span class="font-medium text-sm">تسجيل خروج</span>
+          </button>
+        </form>
+      </div>
+
+    </nav>
+
+    <div class="relative z-10 p-4 border-t border-slate-50 dark:border-border-dark/50">
+      <div class="flex items-center gap-3">
+        <div class="size-10 rounded-full bg-cover bg-center ring-2 ring-white dark:ring-accent/30 shadow-sm"
+             style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuDncTuOz-pCokbtv2AWGrnETeGCj6bw_3Yfp6Cf4KFfYwjf7b527Z6oBzc4xi8rdnavAMnlTiXiY86lIQnJqvAFEPN9EMi8fzy-KJD6ZbdslXGsAv_1gLmnmnl42lE2sp19OjaLphfnF05zwxf_-fh1bVDsGImSkKv2DtSUYMvSQmXsfThtsCZXaaCa0tgrN6lla2x2zDSo8e_7wajMsMBnASEm-Unu9luUwXjTPGRYXVGC_dnX6-v_66DSR6bs2O_KSqCSimiwTgU');"></div>
+        <div class="min-w-0">
+          <p class="text-sm font-bold text-slate-800 dark:text-white truncate"><%= admin?.username || "مدير النظام" %></p>
+          <p class="text-xs text-slate-500 truncate dark:text-[11px]">مدير النظام</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- DESKTOP SIDEBAR -->
   <aside class="relative flex w-72 flex-col border-e z-20 hidden lg:flex
                 bg-white border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)]
                 dark:bg-surface-dark dark:border-border-dark dark:shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
@@ -139,7 +271,7 @@
 
     <nav class="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-8 dark:py-8">
 
-      <!-- ✅ (النقاط المضافة) قسم الإدارة مثل القالب الموحد -->
+      <!-- ✅ الإدارة -->
       <div class="flex flex-col gap-1 dark:gap-1.5">
         <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
           <span class="dark:hidden">الإدارة</span>
@@ -167,8 +299,7 @@
           <span class="ms-auto text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border
                        bg-white text-primary border-primary/10
                        dark:bg-accent dark:text-black dark:border-transparent">
-            <span class="dark:hidden">نشط</span>
-            <span class="hidden dark:inline">نشط</span>
+            نشط
           </span>
         </a>
 
@@ -191,7 +322,7 @@
         </a>
       </div>
 
-      <!-- ✅ (النقاط المضافة) روابط الموقع مثل القالب الموحد -->
+      <!-- ✅ روابط الموقع -->
       <div class="flex flex-col gap-1 dark:gap-1.5">
         <p class="px-4 text-xs font-bold text-slate-400 mb-2 dark:text-[11px] dark:text-slate-500 dark:uppercase dark:tracking-widest">
           روابط الموقع
@@ -254,19 +385,31 @@
   <!-- MAIN -->
   <main class="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background-light dark:bg-background-dark">
     <header class="flex items-center justify-between sticky top-0 z-20 backdrop-blur-md border-b
-                   h-20 px-8 bg-white/80 border-slate-200/60
+                   h-20 px-4 sm:px-8 bg-white/80 border-slate-200/60
                    dark:h-24 dark:px-10 dark:bg-surface-dark/90 dark:border-border-dark dark:backdrop-blur-xl">
-      <div class="flex flex-col justify-center">
-        <div class="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1
-                    dark:text-slate-500 dark:text-[11px] dark:font-bold dark:uppercase dark:tracking-widest">
-          <span>الصفحات</span>
-          <span class="material-symbols-outlined text-[10px]">chevron_left</span>
-          <span class="dark:hidden">إدارة الصفحات</span>
-          <span class="hidden dark:inline text-accent/70">تحرير المحتوى</span>
+
+      <div class="flex items-center gap-3">
+        <!-- ✅ زر القائمة للموبايل (NEW) -->
+        <button id="menuBtn"
+          class="lg:hidden flex items-center justify-center size-10 rounded-lg shadow-sm transition-colors
+                 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50
+                 dark:bg-surface-dark dark:border-border-dark dark:text-accent dark:hover:border-accent dark:hover:bg-accent/10 active:scale-95"
+          type="button" title="القائمة">
+          <span class="material-symbols-outlined text-[22px]">menu</span>
+        </button>
+
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1
+                      dark:text-slate-500 dark:text-[11px] dark:font-bold dark:uppercase dark:tracking-widest">
+            <span>الصفحات</span>
+            <span class="material-symbols-outlined text-[10px]">chevron_left</span>
+            <span class="dark:hidden">إدارة الصفحات</span>
+            <span class="hidden dark:inline text-accent/70">تحرير المحتوى</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
+            إدارة صفحات الموقع
+          </h2>
         </div>
-        <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight">
-          إدارة صفحات الموقع
-        </h2>
       </div>
 
       <div class="flex items-center gap-3 sm:gap-4 dark:gap-4">
@@ -281,7 +424,7 @@
 
         <button id="saveAll"
           class="flex items-center gap-2 text-sm font-bold rounded-lg transition-colors
-                 px-6 py-2 bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
+                 px-5 sm:px-6 py-2 bg-primary text-white hover:bg-primary/90 shadow-[0_2px_8px_rgba(31,99,122,0.3)]
                  dark:px-8 dark:py-2.5 dark:bg-accent dark:text-black dark:hover:bg-primary-dark dark:shadow-[0_4px_20px_rgba(227,197,111,0.2)] active:scale-95"
           type="button">
           <span class="material-symbols-outlined text-[18px] dark:text-[20px]">save</span>
@@ -491,7 +634,7 @@
             </section>
           </form>
 
-          <!-- SUPPORT FORM (UPDATED: tabs + contact & donation fields) -->
+          <!-- SUPPORT FORM -->
           <form id="formSupport" method="post" action="/admin/pages/save" class="h-full">
             <input type="hidden" name="slug" value="support"/>
 
@@ -729,6 +872,39 @@
       setTheme(cur === "dark" ? "light" : "dark");
     });
     setTheme(localStorage.getItem("theme") || (document.documentElement.getAttribute("data-theme") || "dark"));
+  })();
+
+  // ✅ Mobile sidebar toggle (NEW)
+  (function () {
+    const menuBtn = document.getElementById("menuBtn");
+    const sidebar = document.getElementById("mobileSidebar");
+    const overlay = document.getElementById("mobileOverlay");
+    const closeBtn = document.getElementById("closeMobileSidebar");
+
+    function open() {
+      overlay?.classList.remove("hidden");
+      sidebar?.classList.remove("translate-x-full");
+      document.body.style.overflow = "hidden";
+    }
+    function close() {
+      overlay?.classList.add("hidden");
+      sidebar?.classList.add("translate-x-full");
+      document.body.style.overflow = "";
+    }
+
+    menuBtn?.addEventListener("click", open);
+    closeBtn?.addEventListener("click", close);
+    overlay?.addEventListener("click", close);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+
+    // close when clicking any link inside mobile sidebar
+    sidebar?.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (a) close();
+    });
   })();
 
   // Save All
