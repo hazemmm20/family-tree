@@ -40,13 +40,8 @@ document.getElementById("modal")?.addEventListener("click", (e) => {
 
 /* ===== Drawer (Overlay) ===== */
 const drawer = document.getElementById("drawer");
-
-function openDrawer(){
-  drawer?.classList.add("isOpen");
-}
-function closeDrawer(){
-  drawer?.classList.remove("isOpen");
-}
+function openDrawer(){ drawer?.classList.add("isOpen"); }
+function closeDrawer(){ drawer?.classList.remove("isOpen"); }
 
 document.getElementById("toggleDetails")?.addEventListener("click", () => {
   drawer?.classList.toggle("isOpen");
@@ -59,9 +54,7 @@ function showDetailsInSide(person) {
   const childrenCount = person.children ? person.children.length : 0;
 
   const spousesText = (person.spouses && person.spouses.length)
-    ? person.spouses
-        .map(s => `${s.ord ? s.ord + ") " : ""}${s.spouse_name}`)
-        .join("<br>")
+    ? person.spouses.map(s => `${s.ord ? s.ord + ") " : ""}${s.spouse_name}`).join("<br>")
     : "-";
 
   details.innerHTML = `
@@ -74,64 +67,6 @@ function showDetailsInSide(person) {
       ${person.notes ? `<div><b>ملاحظات:</b> ${person.notes}</div>` : ""}
     </div>
   `;
-}
-
-/* ===== Frame (SVG) ===== */
-function starPath(cx, cy, outerR, innerR, points) {
-  let path = "";
-  const step = Math.PI / points;
-  for (let i = 0; i < 2 * points; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const a = i * step - Math.PI / 2;
-    const x = cx + r * Math.cos(a);
-    const y = cy + r * Math.sin(a);
-    path += (i === 0 ? "M" : "L") + x + " " + y + " ";
-  }
-  return path + "Z";
-}
-
-function addFrame(g, w, h) {
-  g.append("rect")
-    .attr("x", -w/2).attr("y", -h/2)
-    .attr("width", w).attr("height", h)
-    .attr("rx", 18).attr("ry", 18)
-    .attr("fill", "var(--cardFill)")
-    .attr("stroke", "#c7a24b")
-    .attr("stroke-width", 2.6);
-
-  g.append("rect")
-    .attr("x", -w/2 + 9).attr("y", -h/2 + 9)
-    .attr("width", w - 18).attr("height", h - 18)
-    .attr("rx", 16).attr("ry", 16)
-    .attr("fill", "var(--cardInner)")
-    .attr("stroke", "#e5e7eb")
-    .attr("stroke-width", 1.2);
-
-  const corners = [
-    {x: -w/2 + 20, y: -h/2 + 20},
-    {x:  w/2 - 20, y: -h/2 + 20},
-    {x: -w/2 + 20, y:  h/2 - 20},
-    {x:  w/2 - 20, y:  h/2 - 20},
-  ];
-  corners.forEach(c => {
-    g.append("circle")
-      .attr("cx", c.x).attr("cy", c.y).attr("r", 8)
-      .attr("fill", "none")
-      .attr("stroke", "#c7a24b")
-      .attr("stroke-width", 1.8);
-
-    g.append("path")
-      .attr("d", starPath(c.x, c.y, 7, 3.4, 8))
-      .attr("fill", "#c7a24b")
-      .attr("opacity", 0.55);
-  });
-
-  g.append("path")
-    .attr("d", `M ${-w/2 + 26} ${22} Q 0 ${10} ${w/2 - 26} ${22}`)
-    .attr("stroke", "#e3c46a")
-    .attr("stroke-width", 2)
-    .attr("fill", "none")
-    .attr("opacity", 0.7);
 }
 
 /* ===== Focus Mode ===== */
@@ -165,40 +100,24 @@ function resetFocus(allNodesSel, allLinksSel) {
 /* ===== Pan/Zoom + Fit ===== */
 let svg, mainG, zoomBehavior;
 
-/* ✅ نخزن state عشان نحدث الثيم بدون Refresh */
 const __treeState = {
   rootData: null,
   nodesSel: null,
   linksSel: null,
-  containerEl: null
+  containerEl: null,
+  layoutBounds: null, // ✅ NEW
+  nodeW: 170,
+  nodeH: 190,
+  foOffsetY: -70
 };
 
-function fitToScreen(containerEl, padding = 90) {
-  const bounds = mainG.node().getBBox();
-  const w = containerEl.clientWidth || 1;
-  const h = containerEl.clientHeight || 1;
-
-  const fullW = bounds.width + padding * 2;
-  const fullH = bounds.height + padding * 2;
-
-  const scale = Math.min(w / fullW, h / fullH);
-  const tx = (w - bounds.width * scale) / 2 - bounds.x * scale;
-  const ty = (h - bounds.height * scale) / 2 - bounds.y * scale;
-
-  const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
-  svg.transition().duration(320).call(zoomBehavior.transform, t);
-}
-
-/* ===== Helpers: Theme + Node HTML ===== */
 function getCurrentTheme() {
-  // يدعم html.dark + data-theme
   const isDark = document.documentElement.classList.contains("dark")
     || (document.documentElement.getAttribute("data-theme") === "dark");
   return isDark ? "dark" : "light";
 }
 
 function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
-  // ✅ LIGHT: نفس شكل/ألوان الوضع الفاتح السابق (يعتمد على CSS في index.html)
   if (theme === "light") {
     return `
       <div class="flex flex-col items-center" style="width:${nodeW}px;height:${nodeH}px;">
@@ -216,39 +135,30 @@ function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
     `;
   }
 
-  // ✅ DARK: نفس شكل/ألوان الوضع الداكن الحالي (ممتاز)
-  const boxBg   = "#16191E";
-  const boxBd   = "rgba(212,175,55,.55)";
-  const nameCol = "#FDFBF7";
-  const subCol  = "rgba(253,251,247,.70)";
-  const photoBg = "#0F1115";
-  const photoBd = "#D4AF37";
-
   return `
     <div class="flex flex-col items-center" style="width:${nodeW}px;height:${nodeH}px;">
-      <div class="node-portrait" style="background:${photoBg}; border-color:${photoBd};">
+      <div class="node-portrait" style="background:#0F1115; border-color:#D4AF37;">
         <img
-          style="width:100%;height:100%;object-fit:contain;display:block;padding:6px;background:${photoBg};"
+          style="width:100%;height:100%;object-fit:contain;display:block;padding:6px;background:#0F1115;"
           src="${photo.replace(/"/g, "%22")}"
           alt="${name.replace(/"/g, "%22")}"
           onerror="this.src='/images/default.png'"
         />
       </div>
-      <div class="name-box" style="background:${boxBg}; border-color:${boxBd};">
-        <div class="node-label-text font-bold text-lg leading-tight" style="color:${nameCol};">${name}</div>
-        ${sub ? `<div class="node-label-text text-[10px]" style="color:${subCol};">${sub}</div>` : ``}
+      <div class="name-box" style="background:#16191E; border-color:rgba(212,175,55,.55);">
+        <div class="node-label-text font-bold text-lg leading-tight" style="color:#FDFBF7;">${name}</div>
+        ${sub ? `<div class="node-label-text text-[10px]" style="color:rgba(253,251,247,.70);">${sub}</div>` : ``}
       </div>
     </div>
   `;
 }
 
-/* ✅ تحديث nodes عند تغيير الثيم بدون Refresh */
 function updateNodesTheme() {
   if (!__treeState.nodesSel) return;
 
   const theme = getCurrentTheme();
-  const nodeW = 170;
-  const nodeH = 190;
+  const nodeW = __treeState.nodeW;
+  const nodeH = __treeState.nodeH;
 
   __treeState.nodesSel.each(function(d) {
     const g = d3.select(this);
@@ -262,31 +172,95 @@ function updateNodesTheme() {
     const name = (d.data.name || "").toString();
     const sub  = d.data.birth_date ? String(d.data.birth_date) : "";
 
-    // نخلي التحديث على نفس عنصر الـ div داخل foreignObject
     const div = fo.select("div");
-    if (!div.empty()) {
-      div.html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
-    } else {
-      // fallback (نادر)
-      fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
-    }
+    if (!div.empty()) div.html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+    else fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
   });
 }
 
-/* ✅ مراقبة تغيير الثيم */
 (function watchThemeChanges(){
   const root = document.documentElement;
   let last = getCurrentTheme();
-
   const obs = new MutationObserver(() => {
     const now = getCurrentTheme();
     if (now === last) return;
     last = now;
     updateNodesTheme();
   });
-
   obs.observe(root, { attributes: true, attributeFilter: ["data-theme", "class"] });
 })();
+
+/* ✅ NEW: bounds from layout (works on mobile + iOS) */
+function computeLayoutBounds(descendants, nodeW, nodeH, foOffsetY) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+  for (const d of descendants) {
+    const left = d.x - nodeW / 2;
+    const right = d.x + nodeW / 2;
+
+    // node group at (x,y) + foreignObject y offset
+    const top = (d.y + foOffsetY);
+    const bottom = (d.y + foOffsetY + nodeH);
+
+    if (left < minX) minX = left;
+    if (right > maxX) maxX = right;
+    if (top < minY) minY = top;
+    if (bottom > maxY) maxY = bottom;
+  }
+
+  if (!isFinite(minX) || !isFinite(minY)) {
+    return { x: 0, y: 0, width: 1, height: 1 };
+  }
+
+  return { x: minX, y: minY, width: (maxX - minX), height: (maxY - minY) };
+}
+
+function applyFitTransform(containerEl, bounds, padding, scaleClamp, mode) {
+  const w = containerEl.clientWidth || 1;
+  const h = containerEl.clientHeight || 1;
+
+  const fullW = bounds.width + padding * 2;
+  const fullH = bounds.height + padding * 2;
+
+  const fitScale = Math.min(w / fullW, h / fullH);
+  const scale = scaleClamp ? Math.max(scaleClamp.min, Math.min(scaleClamp.max, fitScale)) : fitScale;
+
+  let tx, ty;
+
+  if (mode === "readableTop") {
+    // center X, start Y from top
+    const cx = w / 2;
+    const topPadding = scaleClamp?.topPadding ?? 56;
+    tx = cx - ((bounds.x + bounds.width / 2) * scale);
+    ty = topPadding - (bounds.y * scale);
+  } else {
+    // full center
+    tx = (w - bounds.width * scale) / 2 - bounds.x * scale;
+    ty = (h - bounds.height * scale) / 2 - bounds.y * scale;
+  }
+
+  const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+  svg.interrupt().call(zoomBehavior.transform, t);
+}
+
+function fitToScreen(containerEl, padding = 90) {
+  const bounds = __treeState.layoutBounds;
+  if (!bounds) return;
+  applyFitTransform(containerEl, bounds, padding, null, "center");
+}
+
+function fitToScreenReadable(containerEl, padding = 120, minScale = 0.85, maxScale = 1.2, topPadding = 56) {
+  const bounds = __treeState.layoutBounds;
+  if (!bounds) return;
+  applyFitTransform(containerEl, bounds, padding, { min: minScale, max: maxScale, topPadding }, "readableTop");
+}
+
+function resizeSvgToContainer(containerEl) {
+  if (!svg) return;
+  const w = containerEl.clientWidth || 1;
+  const h = containerEl.clientHeight || 1;
+  svg.attr("width", w).attr("height", h).attr("viewBox", [0, 0, w, h]);
+}
 
 /* ===== Render ===== */
 function renderTree(rootData) {
@@ -317,6 +291,14 @@ function renderTree(rootData) {
 
   treeLayout(root);
 
+  // ✅ NEW: layout bounds (no getBBox)
+  __treeState.layoutBounds = computeLayoutBounds(
+    root.descendants(),
+    __treeState.nodeW,
+    __treeState.nodeH,
+    __treeState.foOffsetY
+  );
+
   function curvedLink(d) {
     const sx = d.source.x;
     const sy = d.source.y + 80;
@@ -338,8 +320,8 @@ function renderTree(rootData) {
     .attr("stroke-linecap", "round")
     .attr("opacity", 0.85);
 
-  const nodeW = 170;
-  const nodeH = 190;
+  const nodeW = __treeState.nodeW;
+  const nodeH = __treeState.nodeH;
 
   const nodes = mainG.append("g")
     .selectAll("g")
@@ -358,25 +340,15 @@ function renderTree(rootData) {
     const name = (d.data.name || "").toString();
     const sub = d.data.birth_date ? String(d.data.birth_date) : "";
 
-    const clipId = `clip-${(d.data.id ?? (Math.random()+"").slice(2)).toString().replace(/[^\w-]/g, "")}`;
-
     const fo = g.append("foreignObject")
       .attr("x", -nodeW / 2)
-      .attr("y", -70)
+      .attr("y", __treeState.foOffsetY)
       .attr("width", nodeW)
       .attr("height", nodeH)
       .style("overflow", "visible");
 
-    // ✅ مبدئياً اكتب حسب الثيم الحالي
     const theme = getCurrentTheme();
     fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
-
-    g.append("clipPath")
-      .attr("id", clipId)
-      .append("rect")
-      .attr("x", -39).attr("y", -39)
-      .attr("width", 78).attr("height", 78)
-      .attr("rx", 14).attr("ry", 14);
   });
 
   nodes.on("click", async (event, d) => {
@@ -384,7 +356,6 @@ function renderTree(rootData) {
 
     const p = await fetchPerson(d.data.id);
     showDetailsInSide(p);
-
     openDrawer();
 
     resetFocus(nodes, links);
@@ -435,20 +406,23 @@ function renderTree(rootData) {
     links.attr("opacity", 0.08);
   };
 
-  setTimeout(() => fitToScreen(container, 120), 0);
+  // ✅ mobile-safe initial fit
+  requestAnimationFrame(() => fitToScreenReadable(container, 120, 0.85, 1.2, 56));
 
+  // ✅ resize: update svg size then refit (prevents blank on iOS address bar resize)
   window.addEventListener("resize", () => {
     clearTimeout(window.__fitTimer);
-    window.__fitTimer = setTimeout(() => fitToScreen(container, 120), 120);
+    window.__fitTimer = setTimeout(() => {
+      resizeSvgToContainer(container);
+      fitToScreenReadable(container, 120, 0.85, 1.2, 56);
+    }, 180);
   });
 
-  // ✅ خزّن state للتحديثات الفورية
   __treeState.rootData = rootData;
   __treeState.nodesSel = nodes;
   __treeState.linksSel = links;
   __treeState.containerEl = container;
 
-  // ✅ تأكيد تحديث الثيم مباشرة بعد أول render
   updateNodesTheme();
 }
 
