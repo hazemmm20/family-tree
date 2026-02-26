@@ -86,7 +86,6 @@
       transform: translate(-50%, 0);
     }
 
-    /* ===== Mobile Nav (Premium Capsule + Frosted Drawer) - Unified ===== */
     #mobileNavOverlay.hidden { display: none; }
     #mobileNavOverlay { display: block; }
 
@@ -122,7 +121,6 @@
 
   <% const pdfUrl = (page && page.pdf_url) ? page.pdf_url : ""; %>
 
-  <!-- ✅ Mobile Nav Overlay + Drawer (Public) -->
   <div id="mobileNavOverlay" class="fixed inset-0 bg-black/40 z-[80] hidden" aria-hidden="true"></div>
 
   <aside id="mobileNavDrawer"
@@ -185,7 +183,6 @@
     </nav>
   </aside>
 
-  <!-- Header -->
   <header class="sticky top-0 z-50 w-full bg-white/90 dark:bg-[#0F1115]/95 backdrop-blur-md border-b border-[#e5e7eb] dark:border-white/5">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-20 gap-3">
@@ -212,7 +209,6 @@
             <a class="text-sm font-medium text-primary dark:text-gray-400 hover:text-accent transition-colors" href="/support">الدعم</a>
           </nav>
 
-          <!-- ✅ Mobile capsule button (same as index) -->
           <button id="mobileNavBtn"
                   data-open="false"
                   class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-full
@@ -251,7 +247,6 @@
     </div>
   </header>
 
-  <!-- (باقي الصفحة كما هو عندك بدون تغيير) -->
   <main class="flex-1">
     <div class="relative bg-islamic-pattern">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
@@ -300,7 +295,16 @@
                     <button id="zoomIn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تكبير">
                       <span class="material-symbols-outlined text-[20px]">add</span>
                     </button>
+
                     <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
+
+                    <!-- زر تنزيل صغير موجود -->
+                    <button id="downloadBtn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="تنزيل PDF">
+                      <span class="material-symbols-outlined text-[20px]">download</span>
+                    </button>
+
+                    <div class="h-5 w-px bg-gray-300 dark:bg-white/10"></div>
+
                     <button id="fullBtn" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-primary dark:hover:text-gold transition-colors" title="ملء الشاشة">
                       <span class="material-symbols-outlined text-[20px]">fullscreen</span>
                     </button>
@@ -341,7 +345,20 @@
           </div>
         </div>
 
-        <!-- Footer line already unified below -->
+        <!-- ✅ زر كبير أسفل المعرض (تحميل الشجرة) -->
+        <% if (pdfUrl) { %>
+          <div class="max-w-5xl mx-auto pb-6">
+            <button id="downloadBig"
+              class="w-full flex items-center justify-center gap-3
+                     bg-primary text-white px-6 py-4 rounded-2xl font-black text-lg
+                     hover:bg-[#185366] transition-all shadow-xl shadow-primary/20 active:scale-[0.99]
+                     dark:bg-gold dark:text-background-dark dark:hover:bg-white dark:shadow-gold/10">
+              <span class="material-symbols-outlined text-[26px]">download</span>
+              تحميل الشجرة
+            </button>
+          </div>
+        <% } %>
+
       </div>
     </div>
   </main>
@@ -371,7 +388,6 @@
       applyTheme(localStorage.getItem("theme") || "dark");
     })();
 
-    // ✅ Mobile Nav open/close (Unified)
     (function mobileNavInit(){
       const btn = document.getElementById("mobileNavBtn");
       const navDrawer = document.getElementById("mobileNavDrawer");
@@ -416,8 +432,8 @@
       const btnIn = document.getElementById("zoomIn");
       const btnOut = document.getElementById("zoomOut");
       const btnFull = document.getElementById("fullBtn");
-      const printBtn = document.getElementById("printBtn");
-      const shareBtn = document.getElementById("shareBtn");
+      const btnDownload = document.getElementById("downloadBtn");
+      const btnDownloadBig = document.getElementById("downloadBig"); /* ✅ زر الكبير */
       const pdfFrame = document.getElementById("pdfFrame");
       if (!pdfFrame) return;
 
@@ -458,23 +474,35 @@
         canvas.scrollTop = scrollTop - dy;
       });
 
-      const currentPdfUrl = pdfFrame.getAttribute("src");
+      function downloadPdfFromFrame() {
+        const src = pdfFrame.getAttribute("src");
+        if (!src) return;
 
-      printBtn?.addEventListener("click", () => {
-        const w = window.open(currentPdfUrl, "_blank");
-        if (w) w.onload = () => { try { w.print(); } catch(e) {} };
-      });
+        const absoluteUrl = src.startsWith("http") ? src : (location.origin + src);
+        const safeTitle = (document.title || "tree-pdf")
+          .replace(/[^\w\u0600-\u06FF\- ]+/g, "")
+          .trim()
+          .replace(/\s+/g, "-");
+        const filename = `${safeTitle || "tree-pdf"}.pdf`;
 
-      shareBtn?.addEventListener("click", async () => {
-        const url = currentPdfUrl.startsWith("http") ? currentPdfUrl : (location.origin + currentPdfUrl);
-        try{
-          if(navigator.share) await navigator.share({ title: "شجرة العائلة (PDF)", url });
-          else {
-            await navigator.clipboard.writeText(url);
-            alert("تم نسخ رابط الملف");
-          }
-        } catch(e) {}
-      });
+        try {
+          const a = document.createElement("a");
+          a.href = absoluteUrl;
+          a.download = filename;
+          a.rel = "noopener";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch (e) {
+          window.open(absoluteUrl, "_blank", "noopener");
+        }
+      }
+
+      /* ✅ زر التنزيل الصغير */
+      btnDownload?.addEventListener("click", downloadPdfFromFrame);
+
+      /* ✅ زر التحميل الكبير */
+      btnDownloadBig?.addEventListener("click", downloadPdfFromFrame);
 
       applyZoom();
     })();

@@ -114,7 +114,7 @@
       border-radius: 2px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
     }
-    html.dark .node-label-text { color: #FDFBF7; } /* مهم جدًا للأسماء بالداكن */
+    html.dark .node-label-text { color: #FDFBF7; }
     html.dark .leaf { fill: #D4AF37; opacity: 0.6; filter: none; }
     html.dark .glowing-branch {
       stroke: #D4AF37;
@@ -134,11 +134,50 @@
     }
     #mobileNavDrawer.isOpen { transform: translateX(0); }
 
-    /* زر كبسولة: تغير الأيقونة عند الفتح */
     #mobileNavBtn[data-open="true"] .ico-open { display: none; }
     #mobileNavBtn[data-open="true"] .ico-close { display: inline; }
     #mobileNavBtn[data-open="false"] .ico-open { display: inline; }
     #mobileNavBtn[data-open="false"] .ico-close { display: none; }
+
+    /* =========================
+       Tree Responsive Hardening
+       ========================= */
+
+    /* دعم dvh + fallback */
+    @supports (height: 100dvh) {
+      .tree-viewport {
+        height: clamp(520px, 70dvh, 860px);
+      }
+    }
+    @supports not (height: 100dvh) {
+      .tree-viewport {
+        height: clamp(520px, 70vh, 860px);
+      }
+    }
+
+    /* امنع مشاكل اللمس/الزووم على الموبايل داخل الشجرة */
+    #tree,
+    #tree svg {
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* خلي منطقة الشجرة ثابتة وبدون سكرول أفقي (السكرول يعمل مشاكل مع الـ fit/zoom) */
+    .tree-stage {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* خلي الـ #tree ياخد كامل مساحة المرحلة */
+    #tree {
+      width: 100%;
+      height: 100%;
+      min-height: 520px;
+    }
   </style>
 
   <!-- Keep old stylesheet path -->
@@ -174,7 +213,6 @@
                 border-r border-gray-200 dark:border-accent-gold/20
                 shadow-2xl z-[90]">
 
-    <!-- شريط علوي زخرفي بسيط -->
     <div class="h-1.5 w-full bg-gradient-to-r from-primary via-accent-gold to-primary dark:from-accent-gold-dark dark:via-white/10 dark:to-accent-gold-dark"></div>
 
     <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-accent-gold/10">
@@ -191,7 +229,6 @@
     </div>
 
     <nav class="p-4 flex flex-col gap-2" aria-label="قائمة الجوال">
-      <!-- روابط -->
       <a class="group px-4 py-3 rounded-2xl dark:square-frame font-extrabold
                 border border-gray-200/80 dark:border-accent-gold/20
                 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors
@@ -274,10 +311,7 @@
   <!-- HEADER -->
   <header class="bg-white dark:bg-bg-charcoal/95 dark:backdrop-blur-md border-b border-gray-100 dark:border-accent-gold/20 sticky top-0 z-50 shadow-sm/50 dark:shadow-2xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- هنا أصلحنا مشكلة تداخل زر الموبايل: بدون absolute -->
       <div class="flex justify-between items-center h-20 gap-3">
-
-        <!-- Logo + Title -->
         <div class="flex items-center gap-4 min-w-0">
           <div class="flex items-center gap-3 shrink-0">
             <img class="h-10 w-auto hidden dark:block" src="/assets/logo-dark.svg" alt="شعار العائلة" />
@@ -292,10 +326,7 @@
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="flex items-center gap-2 md:gap-4 lg:gap-8 shrink-0">
-
-          <!-- Desktop nav -->
           <nav class="hidden md:flex gap-6 lg:gap-8" aria-label="التنقل الرئيسي">
             <a class="text-sm font-semibold text-text-dark dark:text-text-cream hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/">الشجرة</a>
             <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/about">نبذة</a>
@@ -304,7 +335,6 @@
             <a class="text-sm font-semibold text-text-dark dark:text-muted-slate hover:text-primary dark:hover:text-accent-gold-dark transition-colors border-b-2 border-transparent hover:border-accent-gold pb-1" href="/support">الدعم</a>
           </nav>
 
-          <!-- Mobile capsule button (no overlap) -->
           <button id="mobileNavBtn"
                   data-open="false"
                   class="md:hidden inline-flex items-center gap-2 px-3 py-2 rounded-full
@@ -321,7 +351,6 @@
             <span class="text-[12px] font-extrabold tracking-wide">القائمة</span>
           </button>
 
-          <!-- Theme + Login -->
           <div class="flex items-center gap-2 dark:border-r dark:border-accent-gold/20 dark:pr-4 md:dark:pr-8">
             <button id="uiThemeBtn"
                     class="p-2.5 rounded-full text-text-dark dark:text-accent-gold-dark hover:bg-gray-100 dark:hover:bg-accent-gold/10 transition-colors flex items-center justify-center border border-transparent hover:border-gray-200 dark:border-accent-gold/30 dark:hover:border-accent-gold/50"
@@ -339,7 +368,6 @@
               <span class="material-symbols-outlined text-[22px]">login</span>
             </a>
 
-            <!-- Hidden themeToggle for app.js (compatibility) -->
             <button id="themeToggle" type="button" class="hidden" aria-pressed="true">الوضع: داكن</button>
           </div>
 
@@ -400,12 +428,13 @@
       </button>
     </div>
 
-    <section class="relative w-full bg-white dark:bg-bg-card rounded-3xl dark:square-frame shadow-xl dark:shadow-2xl shadow-gray-200/50 overflow-hidden border border-accent-gold/20 dark:border-accent-gold/10 min-h-[650px] dark:min-h-[700px] flex flex-col">
+    <!-- ✅ أضفنا class tree-viewport + tree-stage بدون تغيير IDs -->
+    <section class="relative w-full bg-white dark:bg-bg-card rounded-3xl dark:square-frame shadow-xl dark:shadow-2xl shadow-gray-200/50 overflow-hidden border border-accent-gold/20 dark:border-accent-gold/10 flex flex-col tree-viewport">
       <div class="absolute inset-0 bg-islamic-pattern dark:bg-islamic-pattern-dark opacity-40 pointer-events-none"></div>
       <div class="absolute inset-0 bg-gradient-to-b from-white/80 via-transparent to-white/80 dark:from-bg-charcoal/40 dark:to-bg-charcoal/40 pointer-events-none"></div>
 
-      <div class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-x-auto scrollbar-hide">
-        <div id="tree" class="w-full h-[650px] dark:h-[700px]"></div>
+      <div class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8 tree-stage">
+        <div id="tree"></div>
       </div>
 
       <div class="px-6 pb-6 text-xs text-text-muted dark:text-muted-slate font-amiri">
@@ -415,7 +444,7 @@
 
   </main>
 
-  <!-- FOOTER (بدون فيسبوك/إنستجرام) -->
+  <!-- FOOTER -->
   <footer class="bg-white dark:bg-bg-charcoal border-t border-gray-200 dark:border-accent-gold/20 mt-auto">
     <div class="max-w-7xl mx-auto px-4 py-6 md:flex md:items-center md:justify-between dark:py-8">
       <div class="w-full text-center md:text-end dark:text-right">
@@ -468,7 +497,6 @@
   </style>
 
   <script>
-    // Instant theme toggle (no refresh)
     (function instantThemeToggle() {
       const btn = document.getElementById("uiThemeBtn");
       const hiddenBtn = document.getElementById("themeToggle");
@@ -490,14 +518,12 @@
       applyTheme(saved);
     })();
 
-    // Backdrop close
     (function modalBackdropClickFix() {
       const modal = document.getElementById("modal");
       const backdrop = document.getElementById("modalBackdrop");
       backdrop?.addEventListener("click", () => modal?.classList.add("hidden"));
     })();
 
-    // Mobile Nav open/close
     (function mobileNavInit(){
       const btn = document.getElementById("mobileNavBtn");
       const navDrawer = document.getElementById("mobileNavDrawer");
@@ -534,7 +560,6 @@
         if (e.key === "Escape") closeNav();
       });
 
-      // ensure initial state
       setOpenState(false);
     })();
   </script>

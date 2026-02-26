@@ -1,3 +1,5 @@
+/* File: /app.js */
+
 async function fetchTree() {
   const r = await fetch("/api/tree");
   return r.json();
@@ -165,23 +167,50 @@ function resetFocus(allNodesSel, allLinksSel) {
 /* ===== Pan/Zoom + Fit ===== */
 let svg, mainG, zoomBehavior;
 
-/* ✅ نخزن state عشان نحدث الثيم بدون Refresh */
 const __treeState = {
   rootData: null,
   nodesSel: null,
   linksSel: null,
-  containerEl: null
+  containerEl: null,
+  didInitialView: false,
 };
 
-function fitToScreen(containerEl, padding = 90) {
+/* ===== Tuning ===== */
+const NODE_W = 170;
+const NODE_H = 190;
+
+/* تنظيم المسافات (منتظم) */
+const GAP_X = 90;
+const GAP_Y = 110;
+
+/* ✅ تصغير بلا حدود عملية (ممكن تنزل لحد 1%) */
+const ZOOM_MIN = 0.01;
+const ZOOM_MAX = 6;
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function syncSvgSize(containerEl) {
+  if (!containerEl || !svg) return;
+  const width = containerEl.clientWidth || 1;
+  const height = containerEl.clientHeight || 1;
+  svg.attr("width", width).attr("height", height).attr("viewBox", [0, 0, width, height]);
+}
+
+function fitToScreen(containerEl, padding = 110) {
+  if (!containerEl || !mainG || !svg || !zoomBehavior) return;
+
   const bounds = mainG.node().getBBox();
   const w = containerEl.clientWidth || 1;
   const h = containerEl.clientHeight || 1;
 
-  const fullW = bounds.width + padding * 2;
-  const fullH = bounds.height + padding * 2;
+  const fullW = Math.max(1, bounds.width + padding * 2);
+  const fullH = Math.max(1, bounds.height + padding * 2);
 
-  const scale = Math.min(w / fullW, h / fullH);
+  /* ✅ بدون حد أدنى: المستخدم يقدر يوصل لكل الأسماء مهما زادت */
+  const scale = clamp(Math.min(w / fullW, h / fullH), ZOOM_MIN, ZOOM_MAX);
+
   const tx = (w - bounds.width * scale) / 2 - bounds.x * scale;
   const ty = (h - bounds.height * scale) / 2 - bounds.y * scale;
 
@@ -189,16 +218,52 @@ function fitToScreen(containerEl, padding = 90) {
   svg.transition().duration(320).call(zoomBehavior.transform, t);
 }
 
+/* ✅ بداية الشجرة: الجد + أولاده في النص */
+function initialRootAndChildrenView(containerEl, rootHierarchy, padding = 120) {
+  if (!containerEl || !svg || !zoomBehavior) return;
+
+  const w = containerEl.clientWidth || 1;
+  const h = containerEl.clientHeight || 1;
+
+  const nodes = rootHierarchy.descendants().filter(n => (n.depth === 0 || n.depth === 1));
+  if (!nodes.length) return;
+
+  // bbox افتراضي من إحداثيات الداتا + أبعاد الكروت
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const n of nodes) {
+    const x0 = n.x - NODE_W / 2;
+    const x1 = n.x + NODE_W / 2;
+    const y0 = n.y - 90;            // نفس offset تقريبا للـ foreignObject (y:-70) + مسافة
+    const y1 = n.y + (NODE_H - 70); // تقريب بصري للكارت بالكامل
+    minX = Math.min(minX, x0);
+    maxX = Math.max(maxX, x1);
+    minY = Math.min(minY, y0);
+    maxY = Math.max(maxY, y1);
+  }
+
+  const bw = Math.max(1, maxX - minX);
+  const bh = Math.max(1, maxY - minY);
+
+  const fullW = bw + padding * 2;
+  const fullH = bh + padding * 2;
+
+  const scale = clamp(Math.min(w / fullW, h / fullH) * 1.06, ZOOM_MIN, ZOOM_MAX); // نفس الشكل الحالي تقريبًا
+
+  const tx = (w - bw * scale) / 2 - minX * scale;
+  const ty = (h - bh * scale) / 2 - minY * scale;
+
+  const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
+  svg.transition().duration(420).call(zoomBehavior.transform, t);
+}
+
 /* ===== Helpers: Theme + Node HTML ===== */
 function getCurrentTheme() {
-  // يدعم html.dark + data-theme
   const isDark = document.documentElement.classList.contains("dark")
     || (document.documentElement.getAttribute("data-theme") === "dark");
   return isDark ? "dark" : "light";
 }
 
 function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
-  // ✅ LIGHT: نفس شكل/ألوان الوضع الفاتح السابق (يعتمد على CSS في index.html)
   if (theme === "light") {
     return `
       <div class="flex flex-col items-center" style="width:${nodeW}px;height:${nodeH}px;">
@@ -216,7 +281,6 @@ function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
     `;
   }
 
-  // ✅ DARK: نفس شكل/ألوان الوضع الداكن الحالي (ممتاز)
   const boxBg   = "#16191E";
   const boxBd   = "rgba(212,175,55,.55)";
   const nameCol = "#FDFBF7";
@@ -242,13 +306,10 @@ function buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH) {
   `;
 }
 
-/* ✅ تحديث nodes عند تغيير الثيم بدون Refresh */
 function updateNodesTheme() {
   if (!__treeState.nodesSel) return;
 
   const theme = getCurrentTheme();
-  const nodeW = 170;
-  const nodeH = 190;
 
   __treeState.nodesSel.each(function(d) {
     const g = d3.select(this);
@@ -262,18 +323,15 @@ function updateNodesTheme() {
     const name = (d.data.name || "").toString();
     const sub  = d.data.birth_date ? String(d.data.birth_date) : "";
 
-    // نخلي التحديث على نفس عنصر الـ div داخل foreignObject
     const div = fo.select("div");
     if (!div.empty()) {
-      div.html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+      div.html(buildNodeHtml({ photo, name, sub }, theme, NODE_W, NODE_H));
     } else {
-      // fallback (نادر)
-      fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+      fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, NODE_W, NODE_H));
     }
   });
 }
 
-/* ✅ مراقبة تغيير الثيم */
 (function watchThemeChanges(){
   const root = document.documentElement;
   let last = getCurrentTheme();
@@ -304,7 +362,7 @@ function renderTree(rootData) {
   mainG = svg.append("g").attr("class", "mainG");
 
   zoomBehavior = d3.zoom()
-    .scaleExtent([0.35, 2.2])
+    .scaleExtent([ZOOM_MIN, ZOOM_MAX])
     .on("zoom", (event) => mainG.attr("transform", event.transform));
 
   svg.call(zoomBehavior);
@@ -312,8 +370,8 @@ function renderTree(rootData) {
   const root = d3.hierarchy(rootData);
 
   const treeLayout = d3.tree()
-    .nodeSize([220, 240])
-    .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.45));
+    .nodeSize([NODE_W + GAP_X, NODE_H + GAP_Y])
+    .separation((a, b) => (a.parent === b.parent ? 1.0 : 1.15));
 
   treeLayout(root);
 
@@ -338,9 +396,6 @@ function renderTree(rootData) {
     .attr("stroke-linecap", "round")
     .attr("opacity", 0.85);
 
-  const nodeW = 170;
-  const nodeH = 190;
-
   const nodes = mainG.append("g")
     .selectAll("g")
     .data(root.descendants())
@@ -361,15 +416,14 @@ function renderTree(rootData) {
     const clipId = `clip-${(d.data.id ?? (Math.random()+"").slice(2)).toString().replace(/[^\w-]/g, "")}`;
 
     const fo = g.append("foreignObject")
-      .attr("x", -nodeW / 2)
+      .attr("x", -NODE_W / 2)
       .attr("y", -70)
-      .attr("width", nodeW)
-      .attr("height", nodeH)
+      .attr("width", NODE_W)
+      .attr("height", NODE_H)
       .style("overflow", "visible");
 
-    // ✅ مبدئياً اكتب حسب الثيم الحالي
     const theme = getCurrentTheme();
-    fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, nodeW, nodeH));
+    fo.append("xhtml:div").html(buildNodeHtml({ photo, name, sub }, theme, NODE_W, NODE_H));
 
     g.append("clipPath")
       .attr("id", clipId)
@@ -377,6 +431,11 @@ function renderTree(rootData) {
       .attr("x", -39).attr("y", -39)
       .attr("width", 78).attr("height", 78)
       .attr("rx", 14).attr("ry", 14);
+  });
+
+  nodes.on("pointerdown", (event) => {
+    event.preventDefault?.();
+    event.stopPropagation();
   });
 
   nodes.on("click", async (event, d) => {
@@ -405,7 +464,12 @@ function renderTree(rootData) {
     `);
   });
 
-  svg.on("click", () => resetFocus(nodes, links));
+  svg.on("click", (event) => {
+    const target = event?.target;
+    if (!target) return;
+    if (target.closest?.(".nodeCard")) return;
+    resetFocus(nodes, links);
+  });
 
   document.getElementById("resetView").onclick = () => {
     resetFocus(nodes, links);
@@ -435,20 +499,27 @@ function renderTree(rootData) {
     links.attr("opacity", 0.08);
   };
 
-  setTimeout(() => fitToScreen(container, 120), 0);
+  // ✅ أول تحميل: ابدأ بالجد + أولاده في النص
+  if (!__treeState.didInitialView) {
+    __treeState.didInitialView = true;
+    setTimeout(() => initialRootAndChildrenView(container, root, 130), 0);
+  }
 
+  // ✅ Resize: حافظ على نفس الفكرة (الاستكشاف)
   window.addEventListener("resize", () => {
     clearTimeout(window.__fitTimer);
-    window.__fitTimer = setTimeout(() => fitToScreen(container, 120), 120);
+    window.__fitTimer = setTimeout(() => {
+      syncSvgSize(container);
+      // لا نكسر وضع المستخدم: لو عايز بدلها fitToScreen فقط قلّي
+      initialRootAndChildrenView(container, root, 130);
+    }, 160);
   });
 
-  // ✅ خزّن state للتحديثات الفورية
   __treeState.rootData = rootData;
   __treeState.nodesSel = nodes;
   __treeState.linksSel = links;
   __treeState.containerEl = container;
 
-  // ✅ تأكيد تحديث الثيم مباشرة بعد أول render
   updateNodesTheme();
 }
 
